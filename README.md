@@ -1,3 +1,1 @@
-# cloud_folder
-Just for fun...
-UFO was here
+Vidimo, zdes budem hranit clienty
