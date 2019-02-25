@@ -11,9 +11,12 @@ from PyQt5.QtWidgets import (QApplication,
                              QDialog,
                              QGridLayout,
                              QLabel,
+                             QHBoxLayout,
                              QVBoxLayout,
                              QPushButton,
                              QTabWidget,
+                             QTreeWidget,
+                             QTreeWidgetItem,
                              QWidget)
 
 class Cloud_Folder(QDialog):
@@ -24,26 +27,27 @@ class Cloud_Folder(QDialog):
         self.folders = {"Danya" : ["HomeWork_OfCourse", "Pictures",
                                    "Documents"],
                         "Server" : ["ReadMe.txt"],
-                        "Nickita" : ["Do Not Touch"],
-                        "Vlad" : ["Do Not Touch Me!"],
-                        "Homework 4Tb" : ["Hmmmmm"]}
+                        "Nickita" : ["Do Not Touch.f"],
+                        "Vald" : ["Do Not Touch Me!.f"],
+                        "Homework 4Tb" : ["Hmmmmm.f"]}
         
         self.createTree()
         self.createInventory()
+        self.createInfo()
         self.createTab()
         
         layout = QGridLayout()
         layout.addWidget(QLabel("Path[S:Dnaya//"), 0, 0, 1, 3)
         layout.addLayout(self.Tree, 1, 0, 2, 1)
         layout.addLayout(self.Inventory, 1, 1)
-        layout.addWidget(QLabel("Info"), 2, 1)
+        layout.addLayout(self.Info, 2, 1)
         layout.addWidget(self.Tab, 1, 2, 2, 1)
         
         self.setLayout(layout)
         
         self.setWindowTitle("Cloud Folder")
         #self.setWindowIcon()
-        self.setGeometry(100, 100, 900, 450)
+        self.setGeometry(100, 100, 900, 250)
     
     def createTree(self):
         self.Tree = QVBoxLayout()
@@ -58,18 +62,24 @@ class Cloud_Folder(QDialog):
         self.Inventory.setGeometry(QRect(0, 0, 300, 300))
         self.changeInventory()
     
+    def createInfo(self):
+        self.Info = QHBoxLayout()
+        self.Info.addWidget(QLabel("Info:"))
+        lay = QVBoxLayout()
+        A = QPushButton("Apply")
+        lay.addWidget(A)
+        B = QPushButton("Find someone")
+        lay.addWidget(B)
+        self.Info.addLayout(lay)
+    
     def createTab(self):
         self.Tab = QTabWidget()
         
-        tab_1 = QWidget()
+        tab_1 = QTreeWidget()
         tab_1_layout = QVBoxLayout()
         connections = ["Server", "Nickita", "Vald", "Homework 4Tb"]
-        btns = []
-        for i in range(len(connections)):
-            btns.append(QPushButton(connections[i]))
-            btns[i].setFlat(True)
-            btns[i].clicked.connect(lambda:self.changeInventory(_name=connections[i]))
-            tab_1_layout.addWidget(btns[i])
+        for i in connections:
+            self.createLayer(tab_1, i)
     
         tab_1.setLayout(tab_1_layout)
         
@@ -88,6 +98,12 @@ class Cloud_Folder(QDialog):
             btn = QPushButton(i)
             print(i)
             self.Inventory.addWidget(btn)
+            
+    def createLayer(self, home, lay):
+        a = QTreeWidgetItem(home, lay)
+        if lay.count('.') == 0:
+            for i in self.folders[lay]:
+                self.createLayer(a, i)
             
         
 
