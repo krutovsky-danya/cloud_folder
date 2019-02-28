@@ -17,15 +17,16 @@ from PyQt5.QtWidgets import (QApplication,
                              QTabWidget,
                              QTreeWidget,
                              QTreeWidgetItem,
-                             QWidget)
+                             QWidget,
+                             QMainWindow)
 
-class Cloud_Folder(QDialog):
+class Cloud_Folder(QWidget):
     def __init__(self, parent=None):
         super(Cloud_Folder, self).__init__(parent)
         
         self.home = "Danya"
-        self.folders = {"Danya" : ["HomeWork_OfCourse", "Pictures",
-                                   "Documents"],
+        self.folders = {"Danya" : ["HomeWork_OfCourse.", "Pictures.",
+                                   "Documents."],
                         "Server" : ["ReadMe.txt"],
                         "Nickita" : ["Do Not Touch.f"],
                         "Vald" : ["Do Not Touch Me!.f"],
@@ -33,15 +34,13 @@ class Cloud_Folder(QDialog):
         
         self.createTree()
         self.createInventory()
-        self.createInfo()
-        self.createTab()
+        self.createServer()
         
-        layout = QGridLayout()
-        layout.addWidget(QLabel("Path[S:Dnaya//"), 0, 0, 1, 3)
-        layout.addLayout(self.Tree, 1, 0, 2, 1)
-        layout.addLayout(self.Inventory, 1, 1)
-        layout.addLayout(self.Info, 2, 1)
-        layout.addWidget(self.Tab, 1, 2, 2, 1)
+        layout = QHBoxLayout()
+        #layout.addWidget(QLabel("Path[S:Dnaya//"), 0, 0, 1, 3)
+        layout.addWidget(self.Tree)
+        layout.addLayout(self.Inventory)
+        layout.addWidget(self.Server)
         
         self.setLayout(layout)
         
@@ -50,17 +49,22 @@ class Cloud_Folder(QDialog):
         self.setGeometry(100, 100, 900, 250)
     
     def createTree(self):
-        self.Tree = QVBoxLayout()
+        self.Tree = QTreeWidget()
+        self.Tree.header().setVisible(False)
+        self.createLay(self.Tree, self.home)
         
-        self.root = QPushButton(self.home)
-        self.root.setFlat(True)
         
-        self.Tree.addWidget(self.root)
-    
     def createInventory(self):
         self.Inventory = QVBoxLayout()
-        self.Inventory.setGeometry(QRect(0, 0, 300, 300))
-        self.changeInventory()
+        self.Boxes = QHBoxLayout()
+        self.UserBox = QWidget()
+        self.ServerBox = QWidget()
+        self.Boxes.addWidget(self.UserBox)
+        self.Boxes.addWidget(self.ServerBox)
+        self.Inventory.addLayout(self.Boxes)
+        self.createInfo()
+        self.Inventory.addLayout(self.Info)
+        
     
     def createInfo(self):
         self.Info = QHBoxLayout()
@@ -72,14 +76,15 @@ class Cloud_Folder(QDialog):
         lay.addWidget(B)
         self.Info.addLayout(lay)
     
-    def createTab(self):
-        self.Tab = QTabWidget()
+    def createServer(self):
+        self.Server = QTabWidget()
         
         tab_1 = QTreeWidget()
+        tab_1.header().setVisible(False)
         tab_1_layout = QVBoxLayout()
         connections = ["Server", "Nickita", "Vald", "Homework 4Tb"]
         for i in connections:
-            self.createLayer(tab_1, i)
+            self.createLay(tab_1, i)
     
         tab_1.setLayout(tab_1_layout)
         
@@ -87,8 +92,8 @@ class Cloud_Folder(QDialog):
         #tab_2.setPixmap(QPixmap("bebop.jpg"))
         
         
-        self.Tab.addTab(tab_1, "&Connected")
-        self.Tab.addTab(tab_2, "&Preview")
+        self.Server.addTab(tab_1, "&Connected")
+        self.Server.addTab(tab_2, "&Preview")
     
     def changeInventory(self, _name=None):
         self.Inventory = QVBoxLayout()
@@ -99,12 +104,12 @@ class Cloud_Folder(QDialog):
             print(i)
             self.Inventory.addWidget(btn)
             
-    def createLayer(self, home, lay):
-        a = QTreeWidgetItem(home, lay)
+    def createLay(self, home, lay):
+        a = QTreeWidgetItem(home, [lay])
         if lay.count('.') == 0:
             for i in self.folders[lay]:
-                self.createLayer(a, i)
-            
+                self.createLay(a, i)
+
         
 
 if __name__ == '__main__':
@@ -112,6 +117,7 @@ if __name__ == '__main__':
     import sys
 
     app = QApplication(sys.argv)
-    gallery = Cloud_Folder()
-    gallery.show()
+    win = QMainWindow()
+    win.setCentralWidget(Cloud_Folder())
+    win.show()
     sys.exit(app.exec_()) 
