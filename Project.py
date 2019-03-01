@@ -7,7 +7,7 @@ Created on Sat Feb 16 19:27:10 2019
 
 from PyQt5.QtCore import QRect
 from PyQt5.QtGui import QIcon
-#from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (QApplication,
                              QDialog,
                              QGridLayout,
@@ -21,7 +21,9 @@ from PyQt5.QtWidgets import (QApplication,
                              QWidget,
                              QMainWindow,
                              QFileDialog,
-                             QAction)
+                             QAction,
+                             QListWidget,
+                             QListWidgetItem)
 
 class Shell(QMainWindow):
     def __init__(self):
@@ -56,6 +58,39 @@ class Shell(QMainWindow):
     def Find_someone(self):
         print("Find_someone")
 
+class QCustomQWidget (QWidget):
+    def __init__ (self, parent = None):
+        super(QCustomQWidget, self).__init__(parent)
+        self.textQVBoxLayout = QVBoxLayout()
+        self.textUpQLabel    = QLabel()
+        self.textDownQLabel  = QLabel()
+        self.textQVBoxLayout.addWidget(self.textUpQLabel)
+        self.textQVBoxLayout.addWidget(self.textDownQLabel)
+        self.allQHBoxLayout  = QHBoxLayout()
+        self.iconQLabel      = QLabel()
+        self.allQHBoxLayout.addWidget(self.iconQLabel, 0)
+        self.allQHBoxLayout.addLayout(self.textQVBoxLayout, 1)
+        self.setLayout(self.allQHBoxLayout)
+        # setStyleSheet
+        self.textUpQLabel.setStyleSheet('''
+            color: rgb(0, 0, 255);
+        ''')
+        self.textDownQLabel.setStyleSheet('''
+            color: rgb(255, 0, 0);
+        ''')
+
+    def setTextUp (self, text):
+        self.textUpQLabel.setText(text)
+
+    def setTextDown (self, text):
+        self.textDownQLabel.setText(text)
+
+    def setIcon (self, imagePath):
+        self.iconQLabel.setPixmap(QPixmap(imagePath))
+    
+    def num(self):
+        return 666
+
 class Cloud_Folder(QWidget):
     def __init__(self, parent=None):
         super(Cloud_Folder, self).__init__(parent)
@@ -69,13 +104,14 @@ class Cloud_Folder(QWidget):
                         "Homework 4Tb" : ["Hmmmmm.f"]}
 
         self.createTree()
-        #self.createInventory()
+        self.createLists()
+        self.createInventory()
         self.createServer()
 
         layout = QHBoxLayout()
         #layout.addWidget(QLabel("Path[S:Dnaya//"), 0, 0, 1, 3)
         layout.addWidget(self.Tree)
-        #layout.addLayout(self.Inventory)
+        layout.addLayout(self.Inventory)
         layout.addWidget(self.Server)
 
         self.setLayout(layout)
@@ -89,48 +125,47 @@ class Cloud_Folder(QWidget):
         self.Tree.header().setVisible(False)
         self.createLay(self.Tree, self.home)
 
-        '''
     def createInventory(self):
         self.Inventory = QVBoxLayout()
         self.Boxes = QHBoxLayout()
-        self.UserBox = QWidget()
-        self.ServerBox = QWidget()
+        self.UserBox = self.myQListWidget
+        self.ServerBox = QListWidget()
         self.Boxes.addWidget(self.UserBox)
         self.Boxes.addWidget(self.ServerBox)
         self.Inventory.addLayout(self.Boxes)
-        #self.createInfo()
-        #self.Inventory.addLayout(self.Info)
-        '''
-        '''
-    def createInfo(self):
-        self.Info = QHBoxLayout()
-        self.Info.addWidget(QLabel("Info:"))
-        lay = QVBoxLayout()
-        A = QPushButton("Apply")
-        lay.addWidget(A)
-        B = QPushButton("Find someone")
-        lay.addWidget(B)
-        self.Info.addLayout(lay)
-        '''
 
     def createServer(self):
-        self.Server = QTabWidget()
-
-        tab_1 = QTreeWidget()
-        tab_1.header().setVisible(False)
-        tab_1_layout = QVBoxLayout()
+        self.Server = QTreeWidget()
+        self.Server.header().setVisible(False)
         connections = ["Server", "Nickita", "Vald", "Homework 4Tb"]
         for i in connections:
-            self.createLay(tab_1, i)
+            self.createLay(self.Server, i)
 
-        tab_1.setLayout(tab_1_layout)
-
-        tab_2 = QLabel()
         #tab_2.setPixmap(QPixmap("bebop.jpg"))
-
-
-        self.Server.addTab(tab_1, "&Connected")
-        self.Server.addTab(tab_2, "&Preview")
+    
+    def createLists(self):
+        self.myQListWidget = QListWidget(self)
+        for index, name, icon in [
+            ('No.1', 'Meyoko',  'icon.png'),
+            ('No.2', 'Nyaruko', 'icon.png'),
+            ('No.3', 'Louise',  'icon.png')]:
+            # Create QCustomQWidget
+            myQCustomQWidget = QCustomQWidget()
+            myQCustomQWidget.setTextUp(index)
+            myQCustomQWidget.setTextDown(name)
+            myQCustomQWidget.setIcon(icon)
+            # Create QListWidgetItem
+            myQListWidgetItem = QListWidgetItem(self.myQListWidget)
+            # Set size hint
+            myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
+            # Add QListWidgetItem into QListWidget
+            self.myQListWidget.addItem(myQListWidgetItem)
+            self.myQListWidget.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+        self.myQListWidget.itemClicked.connect(self.item_clicked)
+    
+    def item_clicked(self, item):
+        puk =self.myQListWidget.itemWidget(item)
+        print(puk.num())
 
     def changeInventory(self, _name=None):
         self.Inventory = QVBoxLayout()
