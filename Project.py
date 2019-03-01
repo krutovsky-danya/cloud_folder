@@ -18,7 +18,8 @@ from PyQt5.QtWidgets import (QApplication,
                              QTreeWidget,
                              QTreeWidgetItem,
                              QWidget,
-                             QMainWindow)
+                             QMainWindow,
+                             QFileDialog)
 
 class Cloud_Folder(QWidget):
     def __init__(self, parent=None):
