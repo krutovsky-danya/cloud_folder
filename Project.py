@@ -146,9 +146,9 @@ class Cloud_Folder(QWidget):
     def createLists(self):
         self.myQListWidget = QListWidget(self)
         for index, name, icon in [
-            ('No.1', 'Meyoko',  'Icons//mega.jpg'),
-            ('No.2', 'Nyaruko', 'Icons//mega.jpg'),
-            ('No.3', 'Louise',  'Icons//mega.jpg')]:
+            ('No.1', 'Meyoko',  'Icons//mega-min.jpg'),
+            ('No.2', 'Nyaruko', 'Icons//mega-min.jpg'),
+            ('No.3', 'Louise',  'Icons//mega-min.jpg')]:
             # Create QCustomQWidget
             myQCustomQWidget = QCustomQWidget()
             myQCustomQWidget.setTextUp(index)
