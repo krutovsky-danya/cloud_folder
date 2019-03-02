@@ -133,15 +133,24 @@ class Cloud_Folder(QWidget):
         for i in ["HomeWork_OfCourse.", "Pictures.", "Documents."]:
             file = File(name=i)
             self.home.addFile(file)
-            
-        self.folders = {
-                        "Homework 4Tb" : ["Hmmmmm.f"]}
-
+        
         self.createTree()
         self.createLists()
         self.createInventory()
         self.createServer()
-
+        
+        names = ["Server", "Nikita", "Vlad", "Homework 4Tb"]
+        files = ["ReadMe.txt","Do Not Touch.file", "Do Not Touch Me.file", 
+                 "Homework 4Tb"]
+        self.folders = []
+        for i in names:
+            self.folders.append(Folder(name=i, f_id=len(self.folders),
+                                       parent=self.Server))
+            self.folders[len(self.folders) - 1].addFile(File(name=files[len(self.folders) - 1]))
+        
+        for i in self.folders:
+            self.createLay(home=self.Server, obj=i)
+        
         layout = QHBoxLayout()
         #layout.addWidget(QLabel("Path[S:Dnaya//"), 0, 0, 1, 3)
         layout.addWidget(self.Tree)
@@ -151,7 +160,7 @@ class Cloud_Folder(QWidget):
         self.setLayout(layout)
 
         self.setWindowTitle("Cloud Folder")
-        #self.setWindowIcon()
+        self.setWindowIcon(QIcon(QPixmap('Icons//mega.jpg')))
         self.setGeometry(100, 100, 900, 250)
 
     def createTree(self):
@@ -171,20 +180,6 @@ class Cloud_Folder(QWidget):
     def createServer(self):
         self.Server = QTreeWidget()
         self.Server.header().setVisible(False)
-        server = Folder(name="Server")
-        server.addFile(File(name="ReadMe.txt"))
-        Nickita = Folder(name="Nickita")
-        Nickita.addFile(File(name='"Do Not Touch.file'))
-        Vlad = Folder(name="Vlad")
-        Vlad.addFile(File(name="Do Not Touch Me.file"))
-        Homework = Folder(name="Homework 4Tb")
-        Homework.addFile(File(name="Homework 4Tb"))
-        
-        connections = [server, Nickita, Vlad, Homework]
-        for i in connections:
-            self.createLay(home=self.Server, obj=i)
-
-        #tab_2.setPixmap(QPixmap("bebop.jpg"))
     
     def createLists(self):
         self.myQListWidget = QListWidget(self)
