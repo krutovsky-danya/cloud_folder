@@ -25,6 +25,23 @@ from PyQt5.QtWidgets import (QApplication,
                              QListWidget,
                              QListWidgetItem)
 
+class Folder():
+    def __init__(self, name=None, f_id=None, parent=None):
+        self.name = name
+        self.id = f_id
+        self.parent = parent
+        self.folders = []
+        self.files = []
+    
+    def addFile(self, file):
+        self.files.append(file)
+        
+    def addFolder(self, folder):
+        self.folders.append(folder)
+    
+    def changeName(self, name):
+        self.name = name
+
 class Shell(QMainWindow):
     def __init__(self):
         super().__init__()
