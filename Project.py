@@ -25,9 +25,28 @@ from PyQt5.QtWidgets import (QApplication,
                              QListWidget,
                              QListWidgetItem)
 
-class Folder():
-    def __init__(self, name=None, f_id=None, parent=None):
+class Obj():
+    def __init__(self, name=None, kind=None):
         self.name = name
+        self.kind = kind
+    
+    def changeName(self, name):
+        self.name = name
+    
+    def info(self):
+        return self.name
+    
+    def getKind(self):
+        return self.kind
+
+class File(Obj):
+    def _init__(self, name=None, path=None):
+        super().__init__(name=name, kind='File')
+        self.path = path
+
+class Folder(Obj):
+    def __init__(self, name=None, f_id=None, parent=None):
+        super().__init__(name=name, kind='Folder')
         self.id = f_id
         self.parent = parent
         self.folders = []
@@ -39,9 +58,6 @@ class Folder():
     def addFolder(self, folder):
         self.folders.append(folder)
     
-    def changeName(self, name):
-        self.name = name
-
 class Shell(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -100,24 +116,25 @@ class QCustomQWidget (QWidget):
         self.textUpQLabel.setText(text)
 
     def setTextDown (self, text):
+        self.txt = text
         self.textDownQLabel.setText(text)
 
     def setIcon (self, imagePath):
         self.iconQLabel.setPixmap(QPixmap(imagePath))
     
     def num(self):
-        return 666
+        return self.txt
 
 class Cloud_Folder(QWidget):
     def __init__(self, parent=None):
         super(Cloud_Folder, self).__init__(parent)
 
-        self.home = "Danya"
-        self.folders = {"Danya" : ["HomeWork_OfCourse.", "Pictures.",
-                                   "Documents."],
-                        "Server" : ["ReadMe.txt"],
-                        "Nickita" : ["Do Not Touch.f"],
-                        "Vald" : ["Do Not Touch Me!.f"],
+        self.home = Folder(name='Danya', f_id=0)
+        for i in ["HomeWork_OfCourse.", "Pictures.", "Documents."]:
+            file = File(name=i)
+            self.home.addFile(file)
+            
+        self.folders = {
                         "Homework 4Tb" : ["Hmmmmm.f"]}
 
         self.createTree()
@@ -140,7 +157,7 @@ class Cloud_Folder(QWidget):
     def createTree(self):
         self.Tree = QTreeWidget()
         self.Tree.header().setVisible(False)
-        self.createLay(self.Tree, self.home)
+        self.createLay(home=self.Tree, obj=self.home)
 
     def createInventory(self):
         self.Inventory = QVBoxLayout()
@@ -154,9 +171,18 @@ class Cloud_Folder(QWidget):
     def createServer(self):
         self.Server = QTreeWidget()
         self.Server.header().setVisible(False)
-        connections = ["Server", "Nickita", "Vald", "Homework 4Tb"]
+        server = Folder(name="Server")
+        server.addFile(File(name="ReadMe.txt"))
+        Nickita = Folder(name="Nickita")
+        Nickita.addFile(File(name='"Do Not Touch.file'))
+        Vlad = Folder(name="Vlad")
+        Vlad.addFile(File(name="Do Not Touch Me.file"))
+        Homework = Folder(name="Homework 4Tb")
+        Homework.addFile(File(name="Homework 4Tb"))
+        
+        connections = [server, Nickita, Vlad, Homework]
         for i in connections:
-            self.createLay(self.Server, i)
+            self.createLay(home=self.Server, obj=i)
 
         #tab_2.setPixmap(QPixmap("bebop.jpg"))
     
@@ -184,12 +210,14 @@ class Cloud_Folder(QWidget):
         puk =self.myQListWidget.itemWidget(item)
         print(puk.num())
 
-    def createLay(self, home, lay):
-        a = QTreeWidgetItem(home, [lay])
-        if lay.count('.') == 0:
+    def createLay(self, home=None, obj=None):
+        a = QTreeWidgetItem(home, [obj.info()])
+        if obj.getKind() == 'Folder':
             a.setIcon(0, QIcon(QPixmap('Icons//folder.png')))
-            for i in self.folders[lay]:
-                self.createLay(a, i)
+            for i in obj.folders:
+                self.createLay(home=a, obj=i)
+            for i in obj.files:
+                self.createLay(home=a, obj=i)
         else:
             a.setIcon(0, QIcon(QPixmap('Icons//file.png')))
 
