@@ -184,20 +184,14 @@ class Cloud_Folder(QWidget):
         puk =self.myQListWidget.itemWidget(item)
         print(puk.num())
 
-    def changeInventory(self, _name=None):
-        self.Inventory = QVBoxLayout()
-        if _name == None:
-            _name = self.home
-        for i in self.folders[_name]:
-            btn = QPushButton(i)
-            print(i)
-            self.Inventory.addWidget(btn)
-
     def createLay(self, home, lay):
         a = QTreeWidgetItem(home, [lay])
         if lay.count('.') == 0:
+            a.setIcon(0, QIcon(QPixmap('Icons//folder.png')))
             for i in self.folders[lay]:
                 self.createLay(a, i)
+        else:
+            a.setIcon(0, QIcon(QPixmap('Icons//file.png')))
 
 
 
