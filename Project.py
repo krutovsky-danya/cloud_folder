@@ -208,7 +208,7 @@ class Cloud_Folder(QWidget):
 
     def item_double_clicked(self, item):
         if self.type == "Folder":
-            folder = self.getObject
+            folder = self.WindowForUserFolders.itemWidget(item).getObject()
             self.UserTree.setCurrentItem(folder.parent)
 
     def createTree(self, parent = None, obj = None):
