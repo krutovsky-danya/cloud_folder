@@ -3,22 +3,22 @@
 Created on Sat Feb 16 19:27:10 2019
 @author: Даня
 """
-from PyQt5.QtCore import QRect
+#from PyQt5.QtCore import QRect
 from PyQt5.QtGui import QIcon
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (QApplication,
-                             QDialog,
-                             QGridLayout,
+                             #QDialog,
+                             #QGridLayout,
                              QLabel,
                              QHBoxLayout,
-                             QVBoxLayout,
-                             QPushButton,
-                             QTabWidget,
+                             #QVBoxLayout,
+                             #QPushButton,
+                             #QTabWidget,
                              QTreeWidget,
                              QTreeWidgetItem,
                              QWidget,
                              QMainWindow,
-                             QFileDialog,
+                             #QFileDialog,
                              QAction,
                              QListWidget,
                              QListWidgetItem,
@@ -31,6 +31,7 @@ class Folder():
         self.parent_id = parent_id
         self.folders = []
         self.files = []
+        self.parent = None
 
     def changeName(self, name):
         self.name = name
@@ -43,6 +44,9 @@ class Folder():
 
     def addFolder(self, folder):
         self.folders.append(folder)
+    
+    def setParent(self, item):
+        self.parent = item
 
 class Shell(QMainWindow):
     def __init__(self):
@@ -69,7 +73,7 @@ class Shell(QMainWindow):
             self.toolbar.addAction(newAction)
 
     def Download(self):
-        if len(self.main_widget.WindowForFolder.selectedItems()) != 0:
+        if len(self.main_widget.WindowForUserFolders.selectedItems()) != 0:
             print(self.main_widget.PathToFile)
 
     def Upload(self):
@@ -88,11 +92,15 @@ class QCustomQWidget (QWidget):
         self.textLabel = QLabel()
         self.layout.addWidget(self.textLabel)
         self.setLayout(self.layout)
-
+        self.obj = None
+        
     def setText(self, text):
         self.text = text
         self.textLabel.setText(text)
-
+    
+    def setObject(self, obj):
+        self.obj = obj
+    
     def getText(self):
         return self.text
 
@@ -101,6 +109,9 @@ class QCustomQWidget (QWidget):
 
     def getType(self):
         return self.type
+    
+    def getObject(self):
+        return self.obj
 
 class Cloud_Folder(QWidget):
     def __init__(self):
@@ -130,29 +141,29 @@ class Cloud_Folder(QWidget):
                                     '8': ["Will serve to.txt", "Organize and measure.txt"],
                                     '9': ["The best of our.txt", "Energies and skills.txt"]}
         
-        self.ListOfUserFolders = []
+        self.ListOfUserFolders = {}
         for name, id, parent_id in self.FoldersDataFromServer:
             newFolder = Folder(name = name, id = id)
             if parent_id != None:
                 self.ListOfUserFolders[parent_id].addFolder(id)
-            self.ListOfUserFolders.append(newFolder)
+            self.ListOfUserFolders[id] = newFolder
 
         for parent in self.FilesDataFromServer:
             for file in self.FilesDataFromServer[parent]:
                 self.ListOfUserFolders[int(parent)].addFile(file)
         
+        self.itemToFolder = {}
+        
         self.createUserSide()
         self.createUserFolder()
-        '''
-        self.createLists()
-        self.createInventory()
-        self.createServer()
-        '''
+        
+        #createServerFolders
+        #createServerTree
+        
         layout = QHBoxLayout()
         layout.addWidget(self.UserTree)
-        layout.addWidget(self.WindowForFolder)
-        #layout.addLayout(self.Inventory)
-        #layout.addWidget(self.Server)
+        layout.addWidget(self.WindowForUserFolders)
+        
 
         self.setLayout(layout)
 
@@ -164,52 +175,47 @@ class Cloud_Folder(QWidget):
         self.UserTree.itemSelectionChanged.connect(self.FullPathToFolder)
 
     def createUserFolder(self):
-        self.WindowForFolder = QListWidget()
+        self.WindowForUserFolders = QListWidget()
 
     def updateWindow(self):
-        self.WindowForFolder.clear()
+        self.WindowForUserFolders.clear()
         for index in self.ListOfUserFolders[self.FilesFromFolder()].folders:
             myQCustomQWidget = QCustomQWidget()
             myQCustomQWidget.setText(self.ListOfUserFolders[index].getName())
             myQCustomQWidget.setType("Folder")
-            myQListWidgetItem = QListWidgetItem(self.WindowForFolder)
+            myQCustomQWidget.setObject(self.ListOfUserFolders[self.FilesFromFolder()])
+            myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
             myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
-            self.WindowForFolder.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+            self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
             myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//Folder.png')))
 
         for text in self.ListOfUserFolders[self.FilesFromFolder()].files:
             myQCustomQWidget = QCustomQWidget()
             myQCustomQWidget.setText(text)
             myQCustomQWidget.setType("File")
-            myQListWidgetItem = QListWidgetItem(self.WindowForFolder)
+            
+            myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
             myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
-            self.WindowForFolder.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+            self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
             myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
-        self.WindowForFolder.itemClicked.connect(self.item_clicked)
-        self.WindowForFolder.itemDoubleClicked.connect(self.item_double_clicked)
+        self.WindowForUserFolders.itemClicked.connect(self.item_clicked)
+        self.WindowForUserFolders.itemDoubleClicked.connect(self.item_double_clicked)
 
     def item_clicked(self, item):
-        file = self.WindowForFolder.itemWidget(item)
+        file = self.WindowForUserFolders.itemWidget(item)
         self.PathToFile = self.PathToFolder +  file.getText()
         self.type = file.getType()
 
     def item_double_clicked(self, item):
         if self.type == "Folder":
-            iterator = QTreeWidgetItemIterator(self.UserTree, QTreeWidgetItemIterator.All)
-            item = iterator.value()
-            localpath = self.PathToFile[self.PathToFile.find("//") + 2:]
-            while len(localpath) != 0:
-                iterator += 1
-                item = iterator.value()
-                if item.text(0) == localpath[0:localpath.find("//")]:
-                    localpath = localpath[localpath.find("//") + 2:]
-                elif item.text(0) == localpath:
-                    localpath = ""
-            self.UserTree.setCurrentItem(item)
+            folder = self.getObject
+            self.UserTree.setCurrentItem(folder.parent)
 
     def createTree(self, parent = None, obj = None):
         newFolder = QTreeWidgetItem(parent, [obj.getName()])
         newFolder.setIcon(0, QIcon(QPixmap('Icons//Folder.png')))
+        obj.setParent(newFolder)
+        self.itemToFolder[str(newFolder)] = obj
         for folder in obj.folders:
             self.createTree(parent = newFolder, obj = self.ListOfUserFolders[folder])
 
