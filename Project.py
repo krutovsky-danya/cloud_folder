@@ -168,8 +168,9 @@ class Cloud_Folder(QWidget):
         super().__init__()
         
         self.signIn()
+        if not self.available:
+            pass #здесь нам бы все 3акрыть
         
-        self.user_name = "Danya"
         #                               Name, id, parent_id
         self.FoldersDataFromServer = [["Danya", 0, None],
                                       ["Downloads", 1, 0],
@@ -222,7 +223,7 @@ class Cloud_Folder(QWidget):
     def createUserSide(self):
         self.UserTree = QTreeWidget()
         self.UserTree.header().setVisible(False)
-        self.createTree(parent = self.UserTree, obj = self.ListOfUserFolders[0])
+        self.createTree(parent = self.UserTree, obj = self.ListOfUserFolders[self.user_id])
         self.UserTree.itemSelectionChanged.connect(self.updateWindow)
 
     def createTree(self, parent = None, obj = None):
@@ -311,8 +312,6 @@ class Cloud_Folder(QWidget):
         else:
             self.dialog.show()
             self.dialog.exec_()  #так он ждет и не выубается
-        if not self.available:
-            self.destroy()
         self.logInError.setVisible(False)
         self.setEnabled(True)
         #self.parent.toolbar.setEnabled(False)
@@ -335,6 +334,7 @@ class Cloud_Folder(QWidget):
                         spamwriter = csv.writer(csvfile, delimiter=' ',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
                         spamwriter.writerow(["False"] + [""] + [""])
+                self.user_id = 0
                 #загружаем сет папок и файлов
             else:
                 self.logInError.setText("Login and password do not match.")
