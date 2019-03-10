@@ -95,6 +95,12 @@ class Shell(QMainWindow):
 
     def initUI(self):
         self.main_widget = Cloud_Folder()
+        
+        self.signIn()
+        
+        if not self.available:
+            self.close()
+        
         self.setCentralWidget(self.main_widget)
         self.setWindowTitle("Cloud Folder")
         self.setWindowIcon(QIcon(QPixmap('Icons//mega.jpg')))
@@ -112,172 +118,6 @@ class Shell(QMainWindow):
             newAction = QAction(QIcon('Icons//' + path), text, self)
             newAction.triggered.connect(action)
             self.toolbar.addAction(newAction)
-
-    def Download(self):
-        if len(self.main_widget.WindowForUserFolders.selectedItems()) != 0 and self.main_widget.ID != None:
-            print(self.main_widget.ID)
-
-    def Upload(self):
-        print("Upload")
-        path = "Lul"
-        path = QFileDialog.getOpenFileName(self, "File", "*.*") #возвращает пару путь и еще что-то, непонятно, зачем
-        print(path)
-
-    def Delete(self):
-        print("Delete")
-
-    def Find_someone(self):
-        print("Find_someone")
-    
-    def logOut(self):
-        with open('user.csv', 'w', newline='') as csvfile:
-            spamwriter = csv.writer(csvfile, delimiter=' ',
-                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            spamwriter.writerow(["False"] + [""] + [""])
-        self.close()
-
-class QCustomQWidget (QWidget):
-    def __init__(self):
-        super().__init__()
-        self.layout = QHBoxLayout()
-        self.textLabel = QLabel()
-        self.layout.addWidget(self.textLabel)
-        self.setLayout(self.layout)
-        self.obj = None
-        self.id = None
-
-    def setText(self, text):
-        self.text = text
-        self.textLabel.setText(text)
-
-    def setObject(self, obj):
-        self.obj = obj
-
-    def getText(self):
-        return self.text
-
-    def setType(self, type):
-        self.type = type
-
-    def getType(self):
-        return self.type
-
-    def getObject(self):
-        return self.obj
-
-    def setID(self, id):
-        self.id = id
-
-    def getID(self):
-        return self.id
-
-class Cloud_Folder(QWidget):
-    def __init__(self):
-        super().__init__()
-        
-        self.signIn()
-        if not self.available:
-            exit()
-        
-        #                               Name, id, parent_id
-        self.FoldersDataFromServer = [["Danya", 0, None],
-                                      ["Downloads", 1, 0],
-                                      ["Desktop", 2, 0],
-                                      ["Homeworks", 3, 0],
-                                      ["Downloads", 4, 1],
-                                      ["Drivers", 5, 1],
-                                      ["Python", 6, 2],
-                                      ["Trash", 7, 2],
-                                      ["Economics", 8, 3],
-                                      ["Under13", 9, 3]]
-
-        #Попробуем хранить словарь "имя файла - id файла на сервере", ты вроде был согласен
-        self.FilesDataFromServer = {'0': [],
-                                    '1': [("It's.txt", 1), ("Hard.pdf", 2)],
-                                    '2': [("To.jpg", 3), ("Think up.docx", 4)],
-                                    '3': [("File.pptx", 5), ("Names.mp3", 6)],
-                                    '4': [("We choose to go.txt", 7), ("To the Moon in this.txt", 8)],
-                                    '5': [("Decade and do the.txt", 9), ("Other things, not.txt", 10)],
-                                    '6': [("Because they are.txt", 11), ("Easy, but because.txt", 12)],
-                                    '7': [("They are hard.txt", 13), ("Because that goal.txt", 14)],
-                                    '8': [("Will serve to.txt", 15), ("Organize and measure.txt", 16)],
-                                    '9': [("The best of our.txt", 17), ("Energies and skills.txt", 18)]}
-
-        self.ListOfUserFolders = {}
-        for name, id, parent_id in self.FoldersDataFromServer:
-            newFolder = Folder(name = name, id = id)
-            if parent_id != None:
-                self.ListOfUserFolders[parent_id].addFolder(id)
-            self.ListOfUserFolders[id] = newFolder
-
-        for parent in self.FilesDataFromServer:
-            for file, id in self.FilesDataFromServer[parent]:
-                self.ListOfUserFolders[int(parent)].addFile((file, id))
-
-        self.pathToFolders = {}
-
-        self.createUserSide()
-        self.createUserFolder()
-
-        #createServerFolders
-        #createServerTree
-
-        layout = QHBoxLayout()
-        layout.addWidget(self.UserTree)
-        layout.addWidget(self.WindowForUserFolders)
-
-        self.setLayout(layout)
-
-    def createUserSide(self):
-        self.UserTree = QTreeWidget()
-        self.UserTree.header().setVisible(False)
-        self.createTree(parent = self.UserTree, obj = self.ListOfUserFolders[self.user_id])
-        self.UserTree.itemSelectionChanged.connect(self.updateWindow)
-
-    def createTree(self, parent = None, obj = None):
-        newFolder = QTreeWidgetItem(parent, [obj.getName()])
-        newFolder.setIcon(0, QIcon(QPixmap('Icons//Folder.png')))
-        obj.setPath(newFolder)
-        self.pathToFolders[str(newFolder)] = obj
-        for folder in obj.folders:
-            self.createTree(parent = newFolder, obj = self.ListOfUserFolders[folder])
-
-    def createUserFolder(self):
-        self.WindowForUserFolders = QListWidget()
-
-    def updateWindow(self):
-        self.WindowForUserFolders.clear()
-        for index in self.pathToFolders[str(self.UserTree.currentItem())].folders:
-            myQCustomQWidget = QCustomQWidget()
-            myQCustomQWidget.setText(self.ListOfUserFolders[index].getName())
-            myQCustomQWidget.setType("Folder")
-            myQCustomQWidget.setObject(self.ListOfUserFolders[index].path)
-            myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
-            myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
-            self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
-            myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//Folder.png')))
-
-        for text, id in self.pathToFolders[str(self.UserTree.currentItem())].files:
-            myQCustomQWidget = QCustomQWidget()
-            myQCustomQWidget.setText(text)
-            myQCustomQWidget.setID(id)
-            myQCustomQWidget.setType("File")
-            myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
-            myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
-            self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
-            myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
-        self.WindowForUserFolders.itemClicked.connect(self.item_clicked)
-        self.WindowForUserFolders.itemDoubleClicked.connect(self.item_double_clicked)
-
-    def item_clicked(self, item):
-        file = self.WindowForUserFolders.itemWidget(item)
-        self.ID = file.getID()
-        self.obj = file.getObject()
-        self.type = file.getType()
-
-    def item_double_clicked(self, item):
-        if self.type == "Folder":
-            self.UserTree.setCurrentItem(self.obj)
     
     def signIn(self):   #Для получения логина и пароля
         self.setEnabled(False) #отключает окно, надо бы и ToolBar тоже офнуть...
@@ -353,7 +193,186 @@ class Cloud_Folder(QWidget):
             self.logInError.setVisible(True)
             self.logInError.setText("Login does not exist.")
             self.userPass.setText(None)
-            
+    
+    def Download(self):
+        if len(self.main_widget.WindowForUserFolders.selectedItems()) != 0 and self.main_widget.ID != None:
+            print(self.main_widget.ID)
+
+    def Upload(self):
+        print("Upload")
+        path = "Lul"
+        path = QFileDialog.getOpenFileName(self, "File", "*.*") #возвращает пару путь и еще что-то, непонятно, зачем
+        print(path)
+
+    def Delete(self):
+        print("Delete")
+
+    def Find_someone(self):
+        print("Find_someone")
+    
+    def logOut(self):
+        with open('user.csv', 'w', newline='') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=' ',
+                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            spamwriter.writerow(["False"] + [""] + [""])
+        self.close()
+
+class QCustomQWidget (QWidget):
+    def __init__(self):
+        super().__init__()
+        self.layout = QHBoxLayout()
+        self.textLabel = QLabel()
+        self.layout.addWidget(self.textLabel)
+        self.setLayout(self.layout)
+        self.obj = None
+        self.id = None
+
+    def setText(self, text):
+        self.text = text
+        self.textLabel.setText(text)
+
+    def setObject(self, obj):
+        self.obj = obj
+
+    def getText(self):
+        return self.text
+
+    def setType(self, type):
+        self.type = type
+
+    def getType(self):
+        return self.type
+
+    def getObject(self):
+        return self.obj
+
+    def setID(self, id):
+        self.id = id
+
+    def getID(self):
+        return self.id
+
+class Cloud_Folder(QWidget):
+    def __init__(self):
+        super().__init__()
+        
+        
+        #Все между "###" загружается в файлик и оттуда выкачивается сюда
+        
+        ###
+        self.user_id = 0 #А вообще это загружается при логине
+        
+        #                               Name, id, parent_id
+        """
+        self.FoldersDataFromServer = [["Danya", 0, None],
+                                      ["Downloads", 1, 0],
+                                      ["Desktop", 2, 0],
+                                      ["Homeworks", 3, 0],
+                                      ["Downloads", 4, 1],
+                                      ["Drivers", 5, 1],
+                                      ["Python", 6, 2],
+                                      ["Trash", 7, 2],
+                                      ["Economics", 8, 3],
+                                      ["Under13", 9, 3]]
+        """
+        self.FoldersDataFromServer = []
+        with open('FoldersDataFromServer.csv', newline='') as csvfile:
+            fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
+            for row in fresh:
+                name, self_id, parent_id = row
+                if parent_id == '':
+                    parent_id = None
+                else:
+                    parent_id = int(parent_id)
+                self.FoldersDataFromServer.append([name, int(self_id), parent_id])
+        #Попробуем хранить словарь "имя файла - id файла на сервере", ты вроде был согласен
+        self.FilesDataFromServer = {'0': [],
+                                    '1': [("It's.txt", 1), ("Hard.pdf", 2)],
+                                    '2': [("To.jpg", 3), ("Think up.docx", 4)],
+                                    '3': [("File.pptx", 5), ("Names.mp3", 6)],
+                                    '4': [("We choose to go.txt", 7), ("To the Moon in this.txt", 8)],
+                                    '5': [("Decade and do the.txt", 9), ("Other things, not.txt", 10)],
+                                    '6': [("Because they are.txt", 11), ("Easy, but because.txt", 12)],
+                                    '7': [("They are hard.txt", 13), ("Because that goal.txt", 14)],
+                                    '8': [("Will serve to.txt", 15), ("Organize and measure.txt", 16)],
+                                    '9': [("The best of our.txt", 17), ("Energies and skills.txt", 18)]}
+        ###
+        
+        self.ListOfUserFolders = {}
+        for name, id, parent_id in self.FoldersDataFromServer:
+            newFolder = Folder(name = name, id = id)
+            if parent_id != None:
+                self.ListOfUserFolders[parent_id].addFolder(id)
+            self.ListOfUserFolders[id] = newFolder
+
+        for parent in self.FilesDataFromServer:
+            for file, id in self.FilesDataFromServer[parent]:
+                self.ListOfUserFolders[int(parent)].addFile((file, id))
+
+        self.pathToFolders = {}
+
+        self.createUserSide()
+        self.createUserFolder()
+
+        #createServerFolders
+        #createServerTree
+
+        layout = QHBoxLayout()
+        layout.addWidget(self.UserTree)
+        layout.addWidget(self.WindowForUserFolders)
+
+        self.setLayout(layout)
+
+    def createUserSide(self):
+        self.UserTree = QTreeWidget()
+        self.UserTree.header().setVisible(False)
+        self.createTree(parent = self.UserTree, obj = self.ListOfUserFolders[self.user_id])
+        self.UserTree.itemSelectionChanged.connect(self.updateWindow)
+
+    def createTree(self, parent = None, obj = None):
+        newFolder = QTreeWidgetItem(parent, [obj.getName()])
+        newFolder.setIcon(0, QIcon(QPixmap('Icons//Folder.png')))
+        obj.setPath(newFolder)
+        self.pathToFolders[str(newFolder)] = obj
+        for folder in obj.folders:
+            self.createTree(parent = newFolder, obj = self.ListOfUserFolders[folder])
+
+    def createUserFolder(self):
+        self.WindowForUserFolders = QListWidget()
+
+    def updateWindow(self):
+        self.WindowForUserFolders.clear()
+        for index in self.pathToFolders[str(self.UserTree.currentItem())].folders:
+            myQCustomQWidget = QCustomQWidget()
+            myQCustomQWidget.setText(self.ListOfUserFolders[index].getName())
+            myQCustomQWidget.setType("Folder")
+            myQCustomQWidget.setObject(self.ListOfUserFolders[index].path)
+            myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
+            myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
+            self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+            myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//Folder.png')))
+
+        for text, id in self.pathToFolders[str(self.UserTree.currentItem())].files:
+            myQCustomQWidget = QCustomQWidget()
+            myQCustomQWidget.setText(text)
+            myQCustomQWidget.setID(id)
+            myQCustomQWidget.setType("File")
+            myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
+            myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
+            self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+            myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
+        self.WindowForUserFolders.itemClicked.connect(self.item_clicked)
+        self.WindowForUserFolders.itemDoubleClicked.connect(self.item_double_clicked)
+
+    def item_clicked(self, item):
+        file = self.WindowForUserFolders.itemWidget(item)
+        self.ID = file.getID()
+        self.obj = file.getObject()
+        self.type = file.getType()
+
+    def item_double_clicked(self, item):
+        if self.type == "Folder":
+            self.UserTree.setCurrentItem(self.obj)
 
 if __name__ == '__main__':
     import sys
