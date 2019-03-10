@@ -98,9 +98,6 @@ class Shell(QMainWindow):
         
         self.signIn()
         
-        if not self.available:
-            self.close()
-        
         self.setCentralWidget(self.main_widget)
         self.setWindowTitle("Cloud Folder")
         self.setWindowIcon(QIcon(QPixmap('Icons//mega.jpg')))
@@ -114,6 +111,11 @@ class Shell(QMainWindow):
 
         self.toolbar = self.addToolBar('Commands')
         self.toolbar.setMovable(False)
+        
+        if not self.available:
+            self.main_widget.setEnabled(False)
+            self.toolbar.setEnabled(False)
+        
         for path, text, action in self.ToolBarElements:
             newAction = QAction(QIcon('Icons//' + path), text, self)
             newAction.triggered.connect(action)
