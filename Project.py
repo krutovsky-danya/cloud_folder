@@ -315,7 +315,7 @@ class Cloud_Folder(QWidget):
                         y = a[i][n + 1:]
                         a[i] = (x[1:-1] , int(y))
                     else:
-                        a[i] = None
+                        a = []
                 
                 self.FilesDataFromServer[row[0]] = a
         ###

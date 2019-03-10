@@ -23,7 +23,7 @@ with open('FilesDataFromServer.csv', newline='') as csvfile:
                 y = a[i][n + 1:]
                 a[i] = (x[1:-1] , int(y))
             else:
-                a[i] = None
+                a = []
         
         FilesDataFromServer[row[0]] = a
 
