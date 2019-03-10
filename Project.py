@@ -286,6 +286,7 @@ class Cloud_Folder(QWidget):
                     parent_id = int(parent_id)
                 self.FoldersDataFromServer.append([name, int(self_id), parent_id])
         #Попробуем хранить словарь "имя файла - id файла на сервере", ты вроде был согласен
+        """
         self.FilesDataFromServer = {'0': [],
                                     '1': [("It's.txt", 1), ("Hard.pdf", 2)],
                                     '2': [("To.jpg", 3), ("Think up.docx", 4)],
@@ -296,6 +297,27 @@ class Cloud_Folder(QWidget):
                                     '7': [("They are hard.txt", 13), ("Because that goal.txt", 14)],
                                     '8': [("Will serve to.txt", 15), ("Organize and measure.txt", 16)],
                                     '9': [("The best of our.txt", 17), ("Energies and skills.txt", 18)]}
+        """
+        self.FilesDataFromServer = {}
+        with open('FilesDataFromServer.csv', newline='') as csvfile:
+            fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
+            for row in fresh:
+                data = row[1][1:-1]
+                a = data.split('), (')
+                for i in range(len(a)):
+                    if len(a[i]) > 0:
+                        if a[i][0] == '(':
+                            a[i] = a[i][1:]
+                        if a[i][-1] == ')':
+                            a[i] = a[i][:-1]
+                        n = a[i].rfind(' ')
+                        x = a[i][:n - 1]
+                        y = a[i][n + 1:]
+                        a[i] = (x[1:-1] , int(y))
+                    else:
+                        a[i] = None
+                
+                self.FilesDataFromServer[row[0]] = a
         ###
         
         self.ListOfUserFolders = {}
