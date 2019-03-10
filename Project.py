@@ -278,7 +278,7 @@ class Cloud_Folder(QWidget):
         with open('user.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
             for row in fresh:
-                chek, name, password = row
+                cheсk, name, password = row
         layout = QVBoxLayout()
         self.logInError = QLabel()
         self.logInError.setStyleSheet("QLabel { background-color : white; color : red; }")
@@ -292,11 +292,9 @@ class Cloud_Folder(QWidget):
         layout.addWidget(passInstruction)
         self.userPass = QLineEdit()
         self.userPass.setEchoMode(QLineEdit.Password)
-        if chek == "True":
-            self.userName.setText(name)
-            self.userPass.setText(password)
         layout.addWidget(self.userPass)
         self.remeberme = QRadioButton("Rememeber me")
+        self.remeberme.setChecked(True)
         layout.addWidget(self.remeberme)
         log = QPushButton("Log in")
         log.clicked.connect(self.logIn)
@@ -306,10 +304,15 @@ class Cloud_Folder(QWidget):
         layout.addWidget(sign)
         self.dialog.setLayout(layout)
         self.available = False #Если юзер не войдет, то программа закроется
-        self.dialog.show()
-        self.dialog.exec_()  #так он ждет и не выубается
+        if cheсk == "True":
+            self.userName.setText(name)
+            self.userPass.setText(password)
+            self.logIn()
+        else:
+            self.dialog.show()
+            self.dialog.exec_()  #так он ждет и не выубается
         if not self.available:
-            self.close()
+            self.destroy()
         self.logInError.setVisible(False)
         self.setEnabled(True)
         #self.parent.toolbar.setEnabled(False)
