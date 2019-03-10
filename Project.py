@@ -103,7 +103,8 @@ class Shell(QMainWindow):
         self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
                                 ['Upload.png','Upload to server', self.Upload],
                                 ['Delete.png', 'Delete', self.Delete],
-                                ['Find_someone.png', 'Find_someone', self.Find_someone]]
+                                ['Find_someone.png', 'Find_someone', self.Find_someone],
+                                ['sleepy.jpg', 'Log out', self.logOut]]
 
         self.toolbar = self.addToolBar('Commands')
         self.toolbar.setMovable(False)
@@ -127,6 +128,13 @@ class Shell(QMainWindow):
 
     def Find_someone(self):
         print("Find_someone")
+    
+    def logOut(self):
+        with open('user.csv', 'w', newline='') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=' ',
+                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            spamwriter.writerow(["False"] + [""] + [""])
+        self.close()
 
 class QCustomQWidget (QWidget):
     def __init__(self):
@@ -169,7 +177,7 @@ class Cloud_Folder(QWidget):
         
         self.signIn()
         if not self.available:
-            pass #здесь нам бы все 3акрыть
+            exit()
         
         #                               Name, id, parent_id
         self.FoldersDataFromServer = [["Danya", 0, None],
