@@ -8,7 +8,7 @@ import csv
 from PyQt5.QtGui import (QPixmap,
                          QIcon)
 from PyQt5.QtWidgets import (QApplication,
-                             QDialog,
+                             #QDialog,
                              #QGridLayout,
                              QLabel,
                              QHBoxLayout,
@@ -94,38 +94,13 @@ class Shell(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.main_widget = Cloud_Folder()
         
         self.signIn()
-        
-        self.setCentralWidget(self.main_widget)
-        self.setWindowTitle("Cloud Folder")
-        self.setWindowIcon(QIcon(QPixmap('Icons//mega.jpg')))
-        self.setGeometry(300, 300, 600, 300)
-
-        self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
-                                ['Upload.png','Upload to server', self.Upload],
-                                ['Delete.png', 'Delete', self.Delete],
-                                ['Find_someone.png', 'Find_someone', self.Find_someone],
-                                ['sleepy.jpg', 'Log out', self.logOut]]
-
-        self.toolbar = self.addToolBar('Commands')
-        self.toolbar.setMovable(False)
-        
-        if not self.available:
-            self.main_widget.setEnabled(False)
-            self.toolbar.setEnabled(False)
-        
-        for path, text, action in self.ToolBarElements:
-            newAction = QAction(QIcon('Icons//' + path), text, self)
-            newAction.triggered.connect(action)
-            self.toolbar.addAction(newAction)
     
     def signIn(self):   #Для получения логина и пароля
-        self.setEnabled(False) #отключает окно, надо бы и ToolBar тоже офнуть...
-        self.dialog = QDialog() #Нужны комментарии?
-        self.dialog.setWindowIcon(QIcon(QPixmap("Icons//hot.jpg")))
-        self.dialog.setWindowTitle("Try me.")
+        self.dialog = QWidget() #Нужны комментарии?
+        self.setWindowIcon(QIcon(QPixmap("Icons//hot.jpg")))
+        self.setWindowTitle("Try me.")
         with open('user.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
             for row in fresh:
@@ -154,17 +129,12 @@ class Shell(QMainWindow):
         sign.clicked.connect(lambda: print("А фигушки!"))
         layout.addWidget(sign)
         self.dialog.setLayout(layout)
-        self.available = False #Если юзер не войдет, то программа закроется
         if cheсk == "True":
             self.userName.setText(name)
             self.userPass.setText(password)
             self.logIn()
         else:
-            self.dialog.show()
-            self.dialog.exec_()  #так он ждет и не выубается
-        self.logInError.setVisible(False)
-        self.setEnabled(True)
-        #self.parent.toolbar.setEnabled(False)
+            self.setCentralWidget(self.dialog)
     
     def logIn(self):
         self.logInError.setVisible(False) #Если была ошибка - скрываем
@@ -172,8 +142,6 @@ class Shell(QMainWindow):
         if login in ['admin', 'krutovsky']: #здесь, конечно, будет сетевая часть
             password = 'admin' #по логину будем сравнивать пароли
             if self.userPass.text() == password:
-                self.dialog.close()
-                self.available = True
                 if self.remeberme.isChecked():
                     with open('user.csv', 'w', newline='') as csvfile:
                         spamwriter = csv.writer(csvfile, delimiter=' ',
@@ -186,6 +154,28 @@ class Shell(QMainWindow):
                         spamwriter.writerow(["False"] + [""] + [""])
                 self.user_id = 0
                 #загружаем сет папок и файлов
+                
+                self.main_widget = Cloud_Folder()
+                
+                self.setCentralWidget(self.main_widget)
+                self.setWindowTitle("Cloud Folder")
+                self.setWindowIcon(QIcon(QPixmap('Icons//mega.jpg')))
+                self.setGeometry(300, 300, 600, 300)
+        
+                self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
+                                        ['Upload.png','Upload to server', self.Upload],
+                                        ['Delete.png', 'Delete', self.Delete],
+                                        ['Find_someone.png', 'Find_someone', self.Find_someone],
+                                        ['sleepy.jpg', 'Log out', self.logOut]]
+        
+                self.toolbar = self.addToolBar('Commands')
+                self.toolbar.setMovable(False)
+                
+                for path, text, action in self.ToolBarElements:
+                    newAction = QAction(QIcon('Icons//' + path), text, self)
+                    newAction.triggered.connect(action)
+                    self.toolbar.addAction(newAction)
+            
             else:
                 self.logInError.setText("Login and password do not match.")
                 self.logInError.setVisible(True)
@@ -258,25 +248,7 @@ class Cloud_Folder(QWidget):
     def __init__(self):
         super().__init__()
         
-        
-        #Все между "###" загружается в файлик и оттуда выкачивается сюда
-        
-        ###
         self.user_id = 0 #А вообще это загружается при логине
-        
-        #                               Name, id, parent_id
-        """
-        self.FoldersDataFromServer = [["Danya", 0, None],
-                                      ["Downloads", 1, 0],
-                                      ["Desktop", 2, 0],
-                                      ["Homeworks", 3, 0],
-                                      ["Downloads", 4, 1],
-                                      ["Drivers", 5, 1],
-                                      ["Python", 6, 2],
-                                      ["Trash", 7, 2],
-                                      ["Economics", 8, 3],
-                                      ["Under13", 9, 3]]
-        """
         self.FoldersDataFromServer = []
         with open('FoldersDataFromServer.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
@@ -287,19 +259,7 @@ class Cloud_Folder(QWidget):
                 else:
                     parent_id = int(parent_id)
                 self.FoldersDataFromServer.append([name, int(self_id), parent_id])
-        #Попробуем хранить словарь "имя файла - id файла на сервере", ты вроде был согласен
-        """
-        self.FilesDataFromServer = {'0': [],
-                                    '1': [("It's.txt", 1), ("Hard.pdf", 2)],
-                                    '2': [("To.jpg", 3), ("Think up.docx", 4)],
-                                    '3': [("File.pptx", 5), ("Names.mp3", 6)],
-                                    '4': [("We choose to go.txt", 7), ("To the Moon in this.txt", 8)],
-                                    '5': [("Decade and do the.txt", 9), ("Other things, not.txt", 10)],
-                                    '6': [("Because they are.txt", 11), ("Easy, but because.txt", 12)],
-                                    '7': [("They are hard.txt", 13), ("Because that goal.txt", 14)],
-                                    '8': [("Will serve to.txt", 15), ("Organize and measure.txt", 16)],
-                                    '9': [("The best of our.txt", 17), ("Energies and skills.txt", 18)]}
-        """
+        
         self.FilesDataFromServer = {}
         with open('FilesDataFromServer.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
@@ -320,7 +280,6 @@ class Cloud_Folder(QWidget):
                         a = []
                 
                 self.FilesDataFromServer[row[0]] = a
-        ###
         
         self.ListOfUserFolders = {}
         for name, id, parent_id in self.FoldersDataFromServer:
