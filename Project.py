@@ -92,14 +92,8 @@ class Folder():
 class Shell(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.initUI()
-
-    def initUI(self):
         
-        self.signIn()
-    
-    def signIn(self):   #Для получения логина и пароля
-        self.dialog = QWidget() #Нужны комментарии?
+        self.begining = QWidget() #Нужны комментарии?
         self.setWindowIcon(QIcon(QPixmap("Icons//hot.jpg")))
         self.setWindowTitle("Try me.")
         with open('user.csv', newline='') as csvfile:
@@ -129,13 +123,13 @@ class Shell(QMainWindow):
         sign = QPushButton("Sign in")
         sign.clicked.connect(lambda: print("А фигушки!"))
         layout.addWidget(sign)
-        self.dialog.setLayout(layout)
+        self.begining.setLayout(layout)
         if cheсk == "True":
             self.userName.setText(name)
             self.userPass.setText(password)
             self.logIn()
         else:
-            self.setCentralWidget(self.dialog)
+            self.setCentralWidget(self.begining)
     
     def logIn(self):
         self.logInError.setVisible(False) #Если была ошибка - скрываем
