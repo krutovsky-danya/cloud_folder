@@ -21,7 +21,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     win = Shell()
     win.show()
-    
+
     loading = QDialog()
     firstlay = QHBoxLayout()
     first = QLabel()
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     loading.setWindowIconText(nanachi)
     loading.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
     #loading.show()
-    
+
     topLoading = QDialog()
     secondlay = QHBoxLayout()
     second = QLabel()
@@ -48,5 +48,5 @@ if __name__ == '__main__':
     topLoading.setWindowIconText(nanachi)
     topLoading.setWindowIcon(QIcon(QPixmap('Icons//HirosavaUri.png')))
     #topLoading.show()
-        
+
 sys.exit(app.exec_())
