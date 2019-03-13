@@ -156,13 +156,11 @@ class Shell(QMainWindow):
     def eventFilter(self, obj, event):
         if obj.objectName() == 'ShowListOfDownloads':
             if event.type() == QEvent.Enter:
-                print("Enter")
                 x1, y1, x2, y2 = self.geometry().getCoords()
                 self.main_widget.WindowForProgBars.move(x2 - 300, y1 + 40) #Тут вроде понятно
                 self.main_widget.WindowForProgBars.show()
 
             if event.type() == QEvent.Leave:
-                print("Leave")
                 self.main_widget.WindowForProgBars.hide()
 
         return QWidget.eventFilter(self, obj, event)

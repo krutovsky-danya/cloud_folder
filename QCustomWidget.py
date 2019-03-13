@@ -4,7 +4,7 @@ Created on Tue Mar 12 19:24:25 2019
 
 @author: Даня
 """
-
+from PyQt5.QtGui import QMovie
 from PyQt5.QtWidgets import (QLabel,
                              QHBoxLayout,
                              QWidget,
@@ -50,3 +50,8 @@ class QCustomQWidget (QWidget):
 
     def setHeight(self):
         self.textLabel.setFixedWidth(80)
+
+    def setAnim(self, path):
+        gif = QMovie(path)
+        self.textLabel.setMovie(gif)
+        gif.start()

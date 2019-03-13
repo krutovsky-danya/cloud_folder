@@ -23,6 +23,19 @@ from Folder import Folder
 from QCustomWidget import QCustomQWidget
 from ThreadForDownloading import ThreadForDownloading
 
+STYLE = """
+QProgressBar{
+    border: 2px solid grey;
+    border-radius: 5px;
+    text-align: center
+}
+
+QProgressBar::chunk {
+    background-color: orangered;
+    width: 10px;
+    margin: 0.5px;
+}
+"""
 
 class Cloud_Folder(QWidget):
     def __init__(self):
@@ -159,13 +172,19 @@ class Cloud_Folder(QWidget):
         layout = QHBoxLayout()
         layout.addWidget(self.ListWithProgBars)
         self.WindowForProgBars.setLayout(layout)
+        myQCustomQWidget = QCustomQWidget()
+        myQCustomQWidget.setAnim('Icons//loading.gif')
+        myQListWidgetItem = QListWidgetItem(self.ListWithProgBars)
+        myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
+        self.ListWithProgBars.setItemWidget(myQListWidgetItem, myQCustomQWidget)
         self.WindowForProgBars.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool) #Убирает рамку и заголовок, окно не отображается в панели задач
-        self.WindowForProgBars.setFixedWidth(300)
+        self.WindowForProgBars.setFixedSize(300, 450)
 
     def startNewDownloading(self):
         if ((len(self.WindowForUserFolders.selectedItems())) != 0
             and self.ID != None and self.ID not in self.ListOfDowloads):
             newbar = QProgressBar()
+            newbar.setStyleSheet(STYLE)
             self.ListOfDowloads[self.ID] = [self.text, newbar]
             self.updateWindowForProgBars()
             self.updateWindow()
