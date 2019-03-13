@@ -173,7 +173,7 @@ class Cloud_Folder(QWidget):
         layout.addWidget(self.ListWithProgBars)
         self.WindowForProgBars.setLayout(layout)
         myQCustomQWidget = QCustomQWidget()
-        myQCustomQWidget.setAnim('Icons//loading.gif')
+        myQCustomQWidget.setAnim('Icons//topLoading.gif')
         myQListWidgetItem = QListWidgetItem(self.ListWithProgBars)
         myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
         self.ListWithProgBars.setItemWidget(myQListWidgetItem, myQCustomQWidget)

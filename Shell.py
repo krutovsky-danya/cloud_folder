@@ -7,7 +7,8 @@ Created on Tue Mar 12 19:14:45 2019
 
 import csv
 from PyQt5.QtGui import (QPixmap,
-                         QIcon)
+                         QIcon,
+                         QMovie)
 from PyQt5.QtCore import QSize
 from PyQt5.Qt import QEvent
 from PyQt5.QtWidgets import (QLabel,
@@ -23,6 +24,7 @@ from PyQt5.QtWidgets import (QLabel,
                              QSizePolicy)
 
 from Cloud_Folder import Cloud_Folder
+from nanachi import nanachi
 
 class Shell(QMainWindow):
     def __init__(self):
@@ -84,6 +86,16 @@ class Shell(QMainWindow):
                         spamwriter.writerow(["False"] + [""] + [""])
                 self.user_id = 0
                 #загружаем сет папок и файлов
+
+                #Пока грузит
+                first = QLabel()
+                dance = QMovie('Icons//loading.gif')
+                first.setMovie(dance)
+                dance.start()
+                self.setCentralWidget(first)
+                self.setWindowTitle('Loading')
+                self.setWindowIconText(nanachi)
+                self.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
 
                 self.main_widget = Cloud_Folder()
 

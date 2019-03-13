@@ -33,7 +33,7 @@ if __name__ == '__main__':
     loading.setWindowTitle('Loading')
     loading.setWindowIconText(nanachi)
     loading.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
-    #loading.show()
+    loading.show()
 
     topLoading = QDialog()
     secondlay = QHBoxLayout()
@@ -47,6 +47,6 @@ if __name__ == '__main__':
     topLoading.setWindowTitle('TopLoading')
     topLoading.setWindowIconText(nanachi)
     topLoading.setWindowIcon(QIcon(QPixmap('Icons//HirosavaUri.png')))
-    #topLoading.show()
+    topLoading.show()
 
 sys.exit(app.exec_())
