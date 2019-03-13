@@ -10,7 +10,7 @@ import time
 from PyQt5.QtGui import (QPixmap,
                          QIcon,
                          QMovie)
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import (QSize, QTimer)
 from PyQt5.Qt import QEvent
 from PyQt5.QtWidgets import (QLabel,
                              QVBoxLayout,
@@ -99,41 +99,13 @@ class Shell(QMainWindow):
                 self.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
 
                 if self.check == "False":
-                    time.sleep(5)
-
-                self.main_widget = Cloud_Folder()
-
-                self.setCentralWidget(self.main_widget)
-                self.setWindowTitle("Cloud Folder")
-                self.setWindowIcon(QIcon(QPixmap('Icons//mega.jpg')))
-                self.setGeometry(300, 300, 600, 300)
-
-                self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
-                                        ['Upload.png','Upload to server', self.Upload],
-                                        ['Delete.png', 'Delete', self.Delete],
-                                        ['Find_someone.png', 'Find_someone', self.Find_someone],
-                                        ['sleepy.jpg', 'Log out', self.logOut]]
-
-                self.toolbar = self.addToolBar('Commands')
-                self.toolbar.setMovable(False)
-
-                for path, text, action in self.ToolBarElements:
-                    newAction = QAction(QIcon('Icons//' + path), text, self)
-                    newAction.triggered.connect(action)
-                    self.toolbar.addAction(newAction)
-
-                self.spacer = QWidget()
-                self.spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) #Отодвигаем кнопку с загрузками
-                self.toolbar.addWidget(self.spacer)
-
-                self.ShowListOfDownloads = QPushButton(QIcon("Icons//List.png"),'')
-                self.ShowListOfDownloads.setObjectName('ShowListOfDownloads')
-                self.ShowListOfDownloads.setFlat(True)
-                self.ShowListOfDownloads.setFixedSize(30, 30)
-                self.ShowListOfDownloads.setIconSize(QSize(25, 25)) #Подгоняем кнопку под размер tollbar'овских элементов
-                self.toolbar.addWidget(self.ShowListOfDownloads)
-
-                qApp.installEventFilter(self) #Магическая штука, включающая отслеживание мыши, на сколько я понимаю
+                    self.timerScreen = QTimer()
+                    self.timerScreen.setInterval(5000)
+                    self.timerScreen.start()
+                    self.timerScreen.setSingleShot(True)
+                    self.timerScreen.timeout.connect(self.mainMission)
+                else:
+                    self.mainMission()
 
             else:
                 self.logInError.setText("Login and password do not match.")
@@ -144,6 +116,40 @@ class Shell(QMainWindow):
             self.logInError.setVisible(True)
             self.logInError.setText("Login does not exist.")
             self.userPass.setText(None)
+
+    def mainMission(self):
+        self.main_widget = Cloud_Folder()
+
+        self.setCentralWidget(self.main_widget)
+        self.setWindowTitle("Cloud Folder")
+        self.setWindowIcon(QIcon(QPixmap('Icons//mega.jpg')))
+        self.setGeometry(300, 300, 600, 300)
+
+        self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
+                                ['Upload.png','Upload to server', self.Upload],
+                                ['Delete.png', 'Delete', self.Delete],
+                                ['Find_someone.png', 'Find_someone', self.Find_someone],
+                                ['sleepy.jpg', 'Log out', self.logOut]]
+
+        self.toolbar = self.addToolBar('Commands')
+        self.toolbar.setMovable(False)
+
+        for path, text, action in self.ToolBarElements:
+            newAction = QAction(QIcon('Icons//' + path), text, self)
+            newAction.triggered.connect(action)
+            self.toolbar.addAction(newAction)
+
+        self.spacer = QWidget()
+        self.spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) #Отодвигаем кнопку с загрузками
+        self.toolbar.addWidget(self.spacer)
+
+        self.ShowListOfDownloads = QPushButton(QIcon("Icons//List.png"),'')
+        self.ShowListOfDownloads.setObjectName('ShowListOfDownloads')
+        self.ShowListOfDownloads.setFlat(True)
+        self.ShowListOfDownloads.setFixedSize(30, 30)
+        self.ShowListOfDownloads.setIconSize(QSize(25, 25)) #Подгоняем кнопку под размер tollbar'овских элементов
+        self.toolbar.addWidget(self.ShowListOfDownloads)
+        qApp.installEventFilter(self) #Магическая штука, включающая отслеживание мыши, на сколько я понимаю
 
     def Download(self):
         if len(self.main_widget.WindowForUserFolders.selectedItems()) != 0 and self.main_widget.ID != None:
