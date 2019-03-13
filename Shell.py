@@ -6,6 +6,7 @@ Created on Tue Mar 12 19:14:45 2019
 """
 
 import csv
+import time
 from PyQt5.QtGui import (QPixmap,
                          QIcon,
                          QMovie)
@@ -36,7 +37,7 @@ class Shell(QMainWindow):
         with open('user.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
             for row in fresh:
-                cheсk, name, password = row
+                self.check, name, password = row
         layout = QVBoxLayout()
         self.logInError = QLabel()
         self.logInError.setStyleSheet("QLabel { background-color : white; color : red; }")
@@ -61,7 +62,7 @@ class Shell(QMainWindow):
         sign.clicked.connect(lambda: print("А фигушки!"))
         layout.addWidget(sign)
         self.begining.setLayout(layout)
-        if cheсk == "True":
+        if self.check == "True":
             self.userName.setText(name)
             self.userPass.setText(password)
             self.logIn()
@@ -96,6 +97,9 @@ class Shell(QMainWindow):
                 self.setWindowTitle('Loading')
                 self.setWindowIconText(nanachi)
                 self.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
+
+                if self.check == "False":
+                    time.sleep(5)
 
                 self.main_widget = Cloud_Folder()
 

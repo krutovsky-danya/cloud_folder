@@ -178,7 +178,7 @@ class Cloud_Folder(QWidget):
         myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
         self.ListWithProgBars.setItemWidget(myQListWidgetItem, myQCustomQWidget)
         self.WindowForProgBars.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool) #Убирает рамку и заголовок, окно не отображается в панели задач
-        self.WindowForProgBars.setFixedSize(300, 450)
+        self.WindowForProgBars.setFixedSize(375, 170)
 
     def startNewDownloading(self):
         if ((len(self.WindowForUserFolders.selectedItems())) != 0
