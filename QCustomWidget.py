@@ -7,7 +7,8 @@ Created on Tue Mar 12 19:24:25 2019
 
 from PyQt5.QtWidgets import (QLabel,
                              QHBoxLayout,
-                             QWidget)
+                             QWidget,
+                             QProgressBar)
 
 class QCustomQWidget (QWidget):
     def __init__(self):
@@ -43,3 +44,9 @@ class QCustomQWidget (QWidget):
 
     def getID(self):
         return self.id
+
+    def setBar(self, bar):
+        self.layout.addWidget(bar)
+
+    def setHeight(self):
+        self.textLabel.setFixedWidth(80)

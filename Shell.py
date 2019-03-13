@@ -8,6 +8,8 @@ Created on Tue Mar 12 19:14:45 2019
 import csv
 from PyQt5.QtGui import (QPixmap,
                          QIcon)
+from PyQt5.QtCore import QSize
+from PyQt5.Qt import QEvent
 from PyQt5.QtWidgets import (QLabel,
                              QVBoxLayout,
                              QPushButton,
@@ -16,14 +18,16 @@ from PyQt5.QtWidgets import (QLabel,
                              QFileDialog,
                              QAction,
                              QLineEdit,
-                             QRadioButton)
+                             QRadioButton,
+                             qApp,
+                             QSizePolicy)
 
 from Cloud_Folder import Cloud_Folder
 
 class Shell(QMainWindow):
     def __init__(self):
         super().__init__()
-        
+
         self.begining = QWidget() #Нужны комментарии?
         self.setWindowIcon(QIcon(QPixmap("Icons//hot.jpg")))
         self.setWindowTitle("Try me.")
@@ -61,7 +65,7 @@ class Shell(QMainWindow):
             self.logIn()
         else:
             self.setCentralWidget(self.begining)
-        
+
     def logIn(self):
         self.logInError.setVisible(False) #Если была ошибка - скрываем
         login = self.userName.text() #эта штука в QString
@@ -80,28 +84,41 @@ class Shell(QMainWindow):
                         spamwriter.writerow(["False"] + [""] + [""])
                 self.user_id = 0
                 #загружаем сет папок и файлов
-                
+
                 self.main_widget = Cloud_Folder()
-                
+
                 self.setCentralWidget(self.main_widget)
                 self.setWindowTitle("Cloud Folder")
                 self.setWindowIcon(QIcon(QPixmap('Icons//mega.jpg')))
                 self.setGeometry(300, 300, 600, 300)
-        
+
                 self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
                                         ['Upload.png','Upload to server', self.Upload],
                                         ['Delete.png', 'Delete', self.Delete],
                                         ['Find_someone.png', 'Find_someone', self.Find_someone],
                                         ['sleepy.jpg', 'Log out', self.logOut]]
-        
+
                 self.toolbar = self.addToolBar('Commands')
                 self.toolbar.setMovable(False)
-                
+
                 for path, text, action in self.ToolBarElements:
                     newAction = QAction(QIcon('Icons//' + path), text, self)
                     newAction.triggered.connect(action)
                     self.toolbar.addAction(newAction)
-            
+
+                self.spacer = QWidget()
+                self.spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) #Отодвигаем кнопку с загрузками
+                self.toolbar.addWidget(self.spacer)
+
+                self.ShowListOfDownloads = QPushButton(QIcon("Icons//List.png"),'')
+                self.ShowListOfDownloads.setObjectName('ShowListOfDownloads')
+                self.ShowListOfDownloads.setFlat(True)
+                self.ShowListOfDownloads.setFixedSize(30, 30)
+                self.ShowListOfDownloads.setIconSize(QSize(25, 25)) #Подгоняем кнопку под размер tollbar'овских элементов
+                self.toolbar.addWidget(self.ShowListOfDownloads)
+
+                qApp.installEventFilter(self) #Магическая штука, включающая отслеживание мыши, на сколько я понимаю
+
             else:
                 self.logInError.setText("Login and password do not match.")
                 self.logInError.setVisible(True)
@@ -111,10 +128,11 @@ class Shell(QMainWindow):
             self.logInError.setVisible(True)
             self.logInError.setText("Login does not exist.")
             self.userPass.setText(None)
-    
+
     def Download(self):
         if len(self.main_widget.WindowForUserFolders.selectedItems()) != 0 and self.main_widget.ID != None:
             print(self.main_widget.ID)
+        self.main_widget.startNewDownloading()  #Смотри Cloud_Folder
 
     def Upload(self):
         print("Upload")
@@ -127,10 +145,24 @@ class Shell(QMainWindow):
 
     def Find_someone(self):
         print("Find_someone")
-    
+
     def logOut(self):
         with open('user.csv', 'w', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow(["False"] + [""] + [""])
         self.close()
+
+    def eventFilter(self, obj, event):
+        if obj.objectName() == 'ShowListOfDownloads':
+            if event.type() == QEvent.Enter:
+                print("Enter")
+                x1, y1, x2, y2 = self.geometry().getCoords()
+                self.main_widget.WindowForProgBars.move(x2 - 300, y1 + 40) #Тут вроде понятно
+                self.main_widget.WindowForProgBars.show()
+
+            if event.type() == QEvent.Leave:
+                print("Leave")
+                self.main_widget.WindowForProgBars.hide()
+
+        return QWidget.eventFilter(self, obj, event)
