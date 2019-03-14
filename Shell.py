@@ -6,7 +6,6 @@ Created on Tue Mar 12 19:14:45 2019
 """
 
 import csv
-import time
 from PyQt5.QtGui import (QPixmap,
                          QIcon,
                          QMovie)
@@ -160,6 +159,8 @@ class Shell(QMainWindow):
     def Download(self):
         if len(self.main_widget.WindowForUserFolders.selectedItems()) != 0 and self.main_widget.ID != None:
             print(self.main_widget.ID)
+            name = self.main_widget.text
+
         self.main_widget.startNewDownloading()  #Смотри Cloud_Folder
 
     def Upload(self):
