@@ -31,6 +31,36 @@ class Shell(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
+                                ['Upload.png','Upload to server', self.Upload],
+                                ['Delete.png', 'Delete', self.Delete],
+                                ['Find_someone.png', 'Find_someone', self.Find_someone],
+                                ['sleepy.jpg', 'Log out', self.signOut]]
+
+        self.toolbar = self.addToolBar('Commands')
+        self.toolbar.setMovable(False)
+
+        for path, text, action in self.ToolBarElements:
+            newAction = QAction(QIcon('Icons//' + path), text, self)
+            newAction.triggered.connect(action)
+            self.toolbar.addAction(newAction)
+
+        self.spacer = QWidget()
+        self.spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) #Отодвигаем кнопку с загрузками
+        self.toolbar.addWidget(self.spacer)
+
+        self.ShowListOfDownloads = QPushButton(QIcon("Icons//List.png"),'')
+        self.ShowListOfDownloads.setObjectName('ShowListOfDownloads')
+        self.ShowListOfDownloads.setFlat(True)
+        self.ShowListOfDownloads.setFixedSize(30, 30)
+        self.ShowListOfDownloads.setIconSize(QSize(25, 25)) #Подгоняем кнопку под размер tollbar'овских элементов
+        self.toolbar.addWidget(self.ShowListOfDownloads)
+        qApp.installEventFilter(self) #Магическая штука, включающая отслеживание мыши, на сколько я понимаю
+
+        self.signIn()
+
+    def signIn(self):
+        self.toolbar.setVisible(False)
         self.begining = QWidget() #Нужны комментарии?
         self.setWindowIcon(QIcon(QPixmap("Icons//hot.jpg")))
         self.setWindowTitle("Try me.")
@@ -118,38 +148,14 @@ class Shell(QMainWindow):
             self.userPass.setText(None)
 
     def mainMission(self):
+        self.toolbar.setVisible(True)
+
         self.main_widget = Cloud_Folder()
 
         self.setCentralWidget(self.main_widget)
         self.setWindowTitle("Cloud Folder")
         self.setWindowIcon(QIcon(QPixmap('Icons//mega.jpg')))
         self.setGeometry(300, 300, 600, 300)
-
-        self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
-                                ['Upload.png','Upload to server', self.Upload],
-                                ['Delete.png', 'Delete', self.Delete],
-                                ['Find_someone.png', 'Find_someone', self.Find_someone],
-                                ['sleepy.jpg', 'Log out', self.logOut]]
-
-        self.toolbar = self.addToolBar('Commands')
-        self.toolbar.setMovable(False)
-
-        for path, text, action in self.ToolBarElements:
-            newAction = QAction(QIcon('Icons//' + path), text, self)
-            newAction.triggered.connect(action)
-            self.toolbar.addAction(newAction)
-
-        self.spacer = QWidget()
-        self.spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) #Отодвигаем кнопку с загрузками
-        self.toolbar.addWidget(self.spacer)
-
-        self.ShowListOfDownloads = QPushButton(QIcon("Icons//List.png"),'')
-        self.ShowListOfDownloads.setObjectName('ShowListOfDownloads')
-        self.ShowListOfDownloads.setFlat(True)
-        self.ShowListOfDownloads.setFixedSize(30, 30)
-        self.ShowListOfDownloads.setIconSize(QSize(25, 25)) #Подгоняем кнопку под размер tollbar'овских элементов
-        self.toolbar.addWidget(self.ShowListOfDownloads)
-        qApp.installEventFilter(self) #Магическая штука, включающая отслеживание мыши, на сколько я понимаю
 
     def Download(self):
         if len(self.main_widget.WindowForUserFolders.selectedItems()) != 0 and self.main_widget.ID != None:
@@ -168,12 +174,12 @@ class Shell(QMainWindow):
     def Find_someone(self):
         print("Find_someone")
 
-    def logOut(self):
+    def signOut(self):
         with open('user.csv', 'w', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow(["False"] + [""] + [""])
-        self.close()
+        self.signIn()
 
     def eventFilter(self, obj, event):
         if obj.objectName() == 'ShowListOfDownloads':
