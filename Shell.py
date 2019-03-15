@@ -5,7 +5,7 @@ Created on Tue Mar 12 19:14:45 2019
 @author: Даня
 """
 
-import csv
+import csv, socket
 from PyQt5.QtGui import (QPixmap,
                          QIcon,
                          QMovie)
@@ -132,48 +132,73 @@ class Shell(QMainWindow):
 
     def logIn(self):
         self.logInError.setVisible(False) #Если была ошибка - скрываем
+
+        host = 'localhost'
+        port = 60000
+
+        client = socket.socket()
+        client.connect((host, port))
+
         login = self.userName.text() #эта штука в QString
-        if login in ['admin', 'krutovsky']: #здесь, конечно, будет сетевая часть
-            password = 'admin' #по логину будем сравнивать пароли
-            if self.userPass.text() == password:
-                if self.remeberme.isChecked():
-                    with open('Data//user.csv', 'w', newline='') as csvfile:
-                        spamwriter = csv.writer(csvfile, delimiter=' ',
-                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                        spamwriter.writerow(["True"] + [login] + [password])
-                else:
-                    with open('Data//user.csv', 'w', newline='') as csvfile:
-                        spamwriter = csv.writer(csvfile, delimiter=' ',
-                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                        spamwriter.writerow(["False"] + [""] + [""])
-                self.user_id = 0
-                #загружаем сет папок и файлов
+        password = self.userPass.text()
 
-                #Пока грузит
-                first = QLabel()
-                dance = QMovie('Icons//loading.gif')
-                first.setMovie(dance)
-                dance.start()
-                self.setCentralWidget(first)
-                self.setWindowTitle('Loading')
-                self.setWindowIconText(nanachi)
-                self.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
+        data = login + '~' + password
 
-                if self.check == "False":
-                    self.timerScreen = QTimer()
-                    self.timerScreen.setInterval(5000)
-                    self.timerScreen.start()
-                    self.timerScreen.setSingleShot(True)
-                    self.timerScreen.timeout.connect(self.mainMission)
-                else:
-                    self.mainMission()
+        client.send(data.encode())
 
+        anwser = client.recv(1024).decode()
+
+        if anwser == 'Passed':
+            if self.remeberme.isChecked():
+                with open('Data//user.csv', 'w', newline='') as csvfile:
+                    spamwriter = csv.writer(csvfile, delimiter=' ',
+                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                    spamwriter.writerow(["True"] + [login] + [password])
             else:
-                self.logInError.setText("Login and password do not match.")
-                self.logInError.setVisible(True)
-                self.userPass.setText(None)
-        else:
-            print("admin\nadmin")
+                with open('Data//user.csv', 'w', newline='') as csvfile:
+                    spamwriter = csv.writer(csvfile, delimiter=' ',
+                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                    spamwriter.writerow(["False"] + [""] + [""])
+             #self.user_id = client.recv(1024).decode() #Если вдруг у нас можнт быть ненулевой корень
+
+            #Пока грузит
+            first = QLabel()
+            dance = QMovie('Icons//loading.gif')
+            first.setMovie(dance)
+            dance.start()
+            self.setCentralWidget(first)
+            self.setWindowTitle('Loading')
+            self.setWindowIconText(nanachi)
+            self.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
+
+            file = open('Data//' + 'FoldersDataFromServer.csv', 'wb')
+            l = self.client_sock.recv(1024)
+            while (l):
+                file.write(l)
+                l = self.client_sock.recv(1024)
+            file.close()
+
+            file = open('Data//' + 'FilesDataFromServer.csv', 'wb')
+            l = self.client_sock.recv(1024)
+            while (l):
+                file.write(l)
+                l = self.client_sock.recv(1024)
+            file.close()
+            client.close()
+
+            if self.check == "False":
+                self.timerScreen = QTimer()
+                self.timerScreen.setInterval(5000)
+                self.timerScreen.start()
+                self.timerScreen.setSingleShot(True)
+                self.timerScreen.timeout.connect(self.mainMission)
+            else:
+                self.mainMission()
+        elif anwser == 'LogIn':
+            self.logInError.setText("Login and password do not match.")
+            self.logInError.setVisible(True)
+            self.userPass.setText(None)
+        elif anwser == 'Password':
             self.logInError.setVisible(True)
             self.logInError.setText("Login does not exist.")
             self.userPass.setText(None)
