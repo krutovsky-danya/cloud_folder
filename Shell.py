@@ -21,7 +21,9 @@ from PyQt5.QtWidgets import (QLabel,
                              QLineEdit,
                              QRadioButton,
                              qApp,
-                             QSizePolicy)
+                             QSizePolicy,
+                             QToolButton,
+                             QMenu)
 
 from Cloud_Folder import Cloud_Folder
 from nanachi import nanachi
@@ -30,19 +32,49 @@ class Shell(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.listOfNormalIcons = {'Download from server':'Download.png',
+                                  'Upload to server':'Upload.png',
+                                  'Delete':'Delete.png',
+                                  'Find someone':'Find_someone.png',
+                                  'Sign out':'logOut.png'}
+        self.listOfAnimeIcons = {'Download from server':'Download.jpg',
+                                  'Upload to server':'Upload.jpg',
+                                  'Delete':'Delete.jpg',
+                                  'Find someone':'Find_somechan.png',
+                                  'Sign out':'sleepy.jpg'}
+        self.listOfCuteIcons = {'Download from server':'',
+                                  'Upload to server':'',
+                                  'Delete':'',
+                                  'Find someone':'',
+                                  'Sign out':''}
         self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
                                 ['Upload.png','Upload to server', self.Upload],
                                 ['Delete.png', 'Delete', self.Delete],
-                                ['Find_someone.png', 'Find_someone', self.Find_someone],
-                                ['sleepy.jpg', 'Log out', self.signOut]]
+                                ['Find_someone.png', 'Find someone', self.Find_someone],
+                                ['logOut.png', 'Sign out', self.signOut]]
 
         self.toolbar = self.addToolBar('Commands')
         self.toolbar.setMovable(False)
 
+        self.listOfActions  = {}
+
         for path, text, action in self.ToolBarElements:
             newAction = QAction(QIcon('Icons//' + path), text, self)
             newAction.triggered.connect(action)
+            self.listOfActions[text] = newAction
             self.toolbar.addAction(newAction)
+
+
+        self.changer = QToolButton()
+        self.changer.setIcon(QIcon('Icons//idol.jpg'))
+        menu = QMenu()
+        self.normal = menu.addAction(QIcon('Icons//elonger.jpg'), "Normal")
+        self.normal.triggered.connect(self.changeThemeToNormal)
+        anime = menu.addAction(QIcon('Icons//changer.jpg'), "Anime")
+        anime.triggered.connect(self.changeThemeToAnime)
+        self.changer.setMenu(menu)
+        self.changer.setPopupMode(self.changer.MenuButtonPopup)
+        self.toolbar.addWidget(self.changer)
 
         self.spacer = QWidget()
         self.spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) #Отодвигаем кнопку с загрузками
@@ -181,6 +213,16 @@ class Shell(QMainWindow):
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow(["False"] + [""] + [""])
         self.signIn()
+
+    def changeThemeToNormal(self):
+        for i in self.listOfActions:
+            self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfNormalIcons[i]))
+
+    def changeThemeToAnime(self):
+        for i in self.listOfActions:
+            self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfAnimeIcons[i]))
+        self.normal.setIcon(QIcon('Icons//supa.png'))
+
 
     def eventFilter(self, obj, event):
         if obj.objectName() == 'ShowListOfDownloads':
