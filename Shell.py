@@ -95,7 +95,7 @@ class Shell(QMainWindow):
         self.begining = QWidget() #Нужны комментарии?
         self.setWindowIcon(QIcon(QPixmap("Icons//hot.jpg")))
         self.setWindowTitle("Try me.")
-        with open('user.csv', newline='') as csvfile:
+        with open('Data//user.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
             for row in fresh:
                 self.check, name, password = row
@@ -137,12 +137,12 @@ class Shell(QMainWindow):
             password = 'admin' #по логину будем сравнивать пароли
             if self.userPass.text() == password:
                 if self.remeberme.isChecked():
-                    with open('user.csv', 'w', newline='') as csvfile:
+                    with open('Data//user.csv', 'w', newline='') as csvfile:
                         spamwriter = csv.writer(csvfile, delimiter=' ',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
                         spamwriter.writerow(["True"] + [login] + [password])
                 else:
-                    with open('user.csv', 'w', newline='') as csvfile:
+                    with open('Data//user.csv', 'w', newline='') as csvfile:
                         spamwriter = csv.writer(csvfile, delimiter=' ',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
                         spamwriter.writerow(["False"] + [""] + [""])
@@ -208,7 +208,7 @@ class Shell(QMainWindow):
         print("Find_someone")
 
     def signOut(self):
-        with open('user.csv', 'w', newline='') as csvfile:
+        with open('Data//user.csv', 'w', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow(["False"] + [""] + [""])

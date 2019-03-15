@@ -49,7 +49,7 @@ class Cloud_Folder(QWidget):
 
         self.user_id = 0 #А вообще это загружается при логине
         self.FoldersDataFromServer = []
-        with open('FoldersDataFromServer.csv', newline='') as csvfile:
+        with open('Data//FoldersDataFromServer.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
             for row in fresh:
                 name, self_id, parent_id = row
@@ -60,7 +60,7 @@ class Cloud_Folder(QWidget):
                 self.FoldersDataFromServer.append([name, int(self_id), parent_id])
 
         self.FilesDataFromServer = {}
-        with open('FilesDataFromServer.csv', newline='') as csvfile:
+        with open('Data//FilesDataFromServer.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
             for row in fresh:
                 data = row[1][1:-1]

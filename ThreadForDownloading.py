@@ -1,4 +1,4 @@
-import time
+import socket, time
 from PyQt5.QtCore import (QThread,
                           pyqtSignal)
 
@@ -15,4 +15,5 @@ class ThreadForDownloading(QThread):
         while self.percent != 100:
             self.percent += 1
             self.progress_signal.emit([self.ID, self.percent]) #Отправляем обратно пару ID - процент
+
             time.sleep(1/5)
