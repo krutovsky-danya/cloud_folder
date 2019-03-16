@@ -46,6 +46,61 @@ def mainThread(client, address):
             client.send("Password".encode())
             client.close()
 
+    elif command == "NewFolder":
+            client.send("Ready".encode())
+            name = client.recv(1024).decode()
+
+            client.send("Ready".encode())
+            id = client.recv(1024).decode()
+
+            client.send("Ready".encode())
+            parent_id = client.recv(1024).decode()
+            client.send("Ready".encode())
+            client.close()
+            print(name, id, parent_id)
+            FoldersDataFromServer = []
+            with open("UsersData//" + activeUsers[address[0]] +"//FoldersDataFromServer.csv", newline='') as csvfile:
+                fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                for row in fresh:
+                    adname, adself_id, adparent_id = row
+                    if adparent_id == '':
+                        adparent_id = None
+                    else:
+                        adparent_id = int(adparent_id)
+                    FoldersDataFromServer.append([adname, int(adself_id), adparent_id])
+            FoldersDataFromServer.append([name, id, parent_id])
+            with open("UsersData//" + activeUsers[address[0]] +"//FoldersDataFromServer.csv", 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile, delimiter=' ', quotechar='|',
+                             quoting=csv.QUOTE_MINIMAL)
+                for i in FoldersDataFromServer:
+                    writer.writerow(i)
+
+            FilesDataFromServer = {}
+            with open("UsersData//" + activeUsers[address[0]] + "//FilesDataFromServer.csv", newline='') as csvfile:
+                fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                for row in fresh:
+                    data = row[1][1:-1]
+                    a = data.split('), (')
+                    for i in range(len(a)):
+                        if len(a[i]) > 0:
+                            if a[i][0] == '(':
+                                a[i] = a[i][1:]
+                            if a[i][-1] == ')':
+                                a[i] = a[i][:-1]
+                            n = a[i].rfind(' ')
+                            x = a[i][:n - 1]
+                            y = a[i][n + 1:]
+                            a[i] = (x[1:-1] , int(y))
+                        else:
+                            a = []
+                    FilesDataFromServer[row[0]] = a
+                FilesDataFromServer[id] = []
+                with open("UsersData//" + activeUsers[address[0]] + "//FilesDataFromServer.csv", 'w', newline='') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=' ', quotechar='|',
+                             quoting=csv.QUOTE_MINIMAL)
+                    for i in FilesDataFromServer:
+                        writer.writerow([i, FilesDataFromServer[i]])
+
 host = 'localhost'
 port = 60000
 
