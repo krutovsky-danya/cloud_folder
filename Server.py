@@ -34,8 +34,9 @@ def mainThread(client, address):
 
             client.recv(1024).decode()
             print("Done3")
-            client.close()
 
+            activeUsers[address[0]] = login
+            client.close()
 
         elif login in users:
             client.send("LogIn".encode())
@@ -45,7 +46,7 @@ def mainThread(client, address):
             client.send("Password".encode())
             client.close()
 
-host = '0.0.0.0'
+host = 'localhost'
 port = 60000
 
 server = socket.socket()
@@ -55,6 +56,7 @@ server.listen(10)
 print("Server is running")
 
 users = {}
+activeUsers = {}
 
 with open('Users.csv', newline='') as csvfile:
     fresh = csv.reader(csvfile, delimiter=' ')
