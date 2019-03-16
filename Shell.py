@@ -104,12 +104,12 @@ class Shell(QMainWindow):
         text.setAlignment(Qt.AlignCenter)
         layout.addWidget(text)
 
-        gifLabel = QLabel()
+        self.gifLabel = QLabel()
         gif = QMovie('Icons//connectingpepega.gif')
-        gifLabel.setMovie(gif)
+        self.gifLabel.setMovie(gif)
         gif.start()
-        gifLabel.setAlignment(Qt.AlignCenter)
-        layout.addWidget(gifLabel)
+        self.gifLabel.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.gifLabel)
         widgetForConnecting.setLayout(layout)
         self.setCentralWidget(widgetForConnecting)
         self.setWindowTitle('Connecting')
@@ -123,7 +123,14 @@ class Shell(QMainWindow):
         if data[0] == 1:
             self.client = data[1]
             self.connectionStatus = True
-            self.signIn()
+            gif = QMovie('Icons//successfulpepega.gif')
+            self.gifLabel.setMovie(gif)
+            gif.start()
+            self.timerScreen = QTimer()
+            self.timerScreen.setInterval(3000)
+            self.timerScreen.start()
+            self.timerScreen.setSingleShot(True)
+            self.timerScreen.timeout.connect(self.signIn)
 
         else:
             self.client.send("Ready".encode())
@@ -273,7 +280,7 @@ class Shell(QMainWindow):
             spamwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow(["False"] + [""] + [""])
-        self.signIn()
+        self.close()
 
     def changeThemeToNormal(self):
         for i in self.listOfActions:
