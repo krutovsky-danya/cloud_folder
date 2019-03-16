@@ -9,7 +9,7 @@ import csv, socket
 from PyQt5.QtGui import (QPixmap,
                          QIcon,
                          QMovie)
-from PyQt5.QtCore import (QSize, QTimer)
+from PyQt5.QtCore import (QSize, QTimer, Qt, pyqtSignal)
 from PyQt5.Qt import QEvent
 from PyQt5.QtWidgets import (QLabel,
                              QVBoxLayout,
@@ -27,6 +27,7 @@ from PyQt5.QtWidgets import (QLabel,
 
 from Cloud_Folder import Cloud_Folder
 from nanachi import nanachi
+from ThreadForConnection import ThreadForConnection
 
 class Shell(QMainWindow):
     def __init__(self):
@@ -88,7 +89,46 @@ class Shell(QMainWindow):
         self.toolbar.addWidget(self.ShowListOfDownloads)
         qApp.installEventFilter(self) #Магическая штука, включающая отслеживание мыши, на сколько я понимаю
 
+        self.setMinimumSize(300, 300)
+
+        self.host = ''
+        self.port = 60000
+        self.connectionStatus = False
+
         self.signIn()
+
+    def connectionProblem(self):
+        widgetForConnecting = QWidget()
+        layout = QVBoxLayout()
+        text = QLabel("Connecting. Please stand by")
+        text.setAlignment(Qt.AlignCenter)
+        layout.addWidget(text)
+
+        gifLabel = QLabel()
+        gif = QMovie('Icons//connectingpepega.gif')
+        gifLabel.setMovie(gif)
+        gif.start()
+        gifLabel.setAlignment(Qt.AlignCenter)
+        layout.addWidget(gifLabel)
+        widgetForConnecting.setLayout(layout)
+        self.setCentralWidget(widgetForConnecting)
+        self.setWindowTitle('Connecting')
+        self.setWindowIcon(QIcon(QPixmap('Icons//hot.jpg')))
+
+        self.thread = ThreadForConnection(type = 1, host = self.host, port = self.port)
+        self.thread.signal.connect(self.defForThread)
+        self.thread.start()
+
+    def defForThread(self, data):
+        if data[0] == 1:
+            self.client = data[1]
+            self.connectionStatus = True
+            self.signIn()
+
+        else:
+            self.client.send("Ready".encode())
+            self.client.close()
+            self.mainMission()
 
     def signIn(self):
         self.toolbar.setVisible(False)
@@ -98,7 +138,7 @@ class Shell(QMainWindow):
         with open('Data//user.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
             for row in fresh:
-                self.check, name, password = row
+                self.check, self.login, self.password = row
         layout = QVBoxLayout()
         self.logInError = QLabel()
         self.logInError.setStyleSheet("QLabel { background-color : white; color : red; }")
@@ -123,85 +163,81 @@ class Shell(QMainWindow):
         sign.clicked.connect(lambda: print("А фигушки!"))
         layout.addWidget(sign)
         self.begining.setLayout(layout)
-        if self.check == "True":
-            self.userName.setText(name)
-            self.userPass.setText(password)
+        self.setCentralWidget(self.begining)
+        if self.check == "True" or self.connectionStatus == True:
+            self.userName.setText(self.login)
+            self.userPass.setText(self.password)
             self.logIn()
-        else:
-            self.setCentralWidget(self.begining)
 
     def logIn(self):
         self.logInError.setVisible(False) #Если была ошибка - скрываем
+        print(self.connectionStatus)
 
-        host = 'localhost'
-        port = 60000
+        self.login = self.userName.text()
+        self.password = self.userPass.text()
 
-        client = socket.socket()
-        client.connect((host, port))
+        if self.connectionStatus == False:
+            try:
+                self.client = socket.socket()
+                self.client.connect((self.host, self.port))
+                self.connectionStatus = True
+                self.logIn()
+            except ConnectionRefusedError:
+                self.connectionProblem()
 
-        login = self.userName.text() #эта штука в QString
-        password = self.userPass.text()
+        else:
+            self.client.send("Login".encode())
+            self.client.recv(1024).decode()
 
-        data = login + '~' + password
+            data = self.login + '~' + self.password
 
-        client.send(data.encode())
+            self.client.send(data.encode())
 
-        anwser = client.recv(1024).decode()
+            answer = self.client.recv(1024).decode()
+            print(answer)
 
-        if anwser == 'Passed':
-            if self.remeberme.isChecked():
-                with open('Data//user.csv', 'w', newline='') as csvfile:
-                    spamwriter = csv.writer(csvfile, delimiter=' ',
-                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                    spamwriter.writerow(["True"] + [login] + [password])
-            else:
-                with open('Data//user.csv', 'w', newline='') as csvfile:
-                    spamwriter = csv.writer(csvfile, delimiter=' ',
-                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                    spamwriter.writerow(["False"] + [""] + [""])
-             #self.user_id = client.recv(1024).decode() #Если вдруг у нас можнт быть ненулевой корень
+            if answer == 'Passed':
 
-            #Пока грузит
-            first = QLabel()
-            dance = QMovie('Icons//loading.gif')
-            first.setMovie(dance)
-            dance.start()
-            self.setCentralWidget(first)
-            self.setWindowTitle('Loading')
-            self.setWindowIconText(nanachi)
-            self.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
+                if self.remeberme.isChecked():
+                    with open('Data//user.csv', 'w', newline='') as csvfile:
+                        spamwriter = csv.writer(csvfile, delimiter=' ',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                        spamwriter.writerow(["True"] + [self.login] + [self.password])
+                else:
+                    with open('Data//user.csv', 'w', newline='') as csvfile:
+                        spamwriter = csv.writer(csvfile, delimiter=' ',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                        spamwriter.writerow(["False"] + [""] + [""])
+                 #self.user_id = client.recv(1024).decode() #Если вдруг у нас можнт быть ненулевой корень
 
-            file = open('Data//' + 'FoldersDataFromServer.csv', 'wb')
-            l = self.client_sock.recv(1024)
-            while (l):
-                file.write(l)
-                l = self.client_sock.recv(1024)
-            file.close()
 
-            file = open('Data//' + 'FilesDataFromServer.csv', 'wb')
-            l = self.client_sock.recv(1024)
-            while (l):
-                file.write(l)
-                l = self.client_sock.recv(1024)
-            file.close()
-            client.close()
+                first = QLabel()
+                dance = QMovie('Icons//loading.gif')
+                first.setMovie(dance)
+                dance.start()
+                self.setCentralWidget(first)
+                self.setWindowTitle('Loading')
+                self.setWindowIconText(nanachi)
+                self.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
 
-            if self.check == "False":
-                self.timerScreen = QTimer()
-                self.timerScreen.setInterval(5000)
-                self.timerScreen.start()
-                self.timerScreen.setSingleShot(True)
-                self.timerScreen.timeout.connect(self.mainMission)
-            else:
-                self.mainMission()
-        elif anwser == 'LogIn':
-            self.logInError.setText("Login and password do not match.")
-            self.logInError.setVisible(True)
-            self.userPass.setText(None)
-        elif anwser == 'Password':
-            self.logInError.setVisible(True)
-            self.logInError.setText("Login does not exist.")
-            self.userPass.setText(None)
+                self.thread = ThreadForConnection(type = 2, client = self.client)
+                self.thread.signal.connect(self.defForThread)
+                self.thread.start()
+
+            elif answer == 'LogIn':
+                self.logInError.setText("Login and password do not match.")
+                self.logInError.setVisible(True)
+                self.userPass.setText(None)
+                self.client.close()
+                self.connectionStatus = False
+
+            elif answer == 'Password':
+                self.logInError.setVisible(True)
+                self.logInError.setText("Login does not exist.")
+                self.userPass.setText(None)
+                self.userName.setText(None)
+                self.client.close()
+                self.connectionStatus = False
 
     def mainMission(self):
         self.toolbar.setVisible(True)
