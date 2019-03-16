@@ -1,1 +1,0 @@
-Vidimo, zdes budem hranit servera
