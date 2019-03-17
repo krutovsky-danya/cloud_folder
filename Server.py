@@ -87,14 +87,21 @@ def mainThread(client, address):
         parent_id = client.recv(1024).decode()
         client.send("Ready".encode())
         file = open("UsersData//" + activeUsers[address[0]] + "//Files//" + id, 'wb')
+        print(name, id, parent_id)
+        size = client.recv(1024).decode()
+        print(size)
+        localsize = 0
+        client.send("Ready".encode())
         l = client.recv(1024)
-        while (l):
-            if len(l) < 1024:
-                break
+        localsize += len(l)
+        while (localsize < int(size)):
             file.write(l)
             l = client.recv(1024)
+            localsize += len(l)
+            print(localsize)
         file.write(l)
         file.close()
+        print("Done")
         client.send("Ready".encode())
         client.close()
         commands[address[0]].append(["Uploading", name, id, parent_id])
