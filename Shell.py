@@ -91,7 +91,7 @@ class Shell(QMainWindow):
 
         self.setMinimumSize(300, 300)
 
-        self.host = ''
+        self.host = 'localhost'
         self.port = 60000
         self.connectionStatus = False
 
@@ -280,7 +280,7 @@ class Shell(QMainWindow):
             spamwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow(["False"] + [""] + [""])
-        self.close()
+        self.signIn()
 
     def changeThemeToNormal(self):
         for i in self.listOfActions:
