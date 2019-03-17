@@ -91,8 +91,6 @@ class Cloud_Folder(QWidget):
             for file, id in self.FilesDataFromServer[parent]:
                 self.ListOfUserFolders[int(parent)].addFile((file, id))
 
-
-
         self.pathToFolders = {}
 
         self.createUserSide()
@@ -129,6 +127,7 @@ class Cloud_Folder(QWidget):
             myQCustomQWidget.setText(self.ListOfUserFolders[index].getName())
             myQCustomQWidget.setType("Folder")
             myQCustomQWidget.setObject(self.ListOfUserFolders[index].path)
+            myQCustomQWidget.setID(index)
             myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
             myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
             self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
@@ -181,7 +180,8 @@ class Cloud_Folder(QWidget):
 
     def startNewDownloading(self):
         if ((len(self.WindowForUserFolders.selectedItems())) != 0
-            and self.ID != None and self.ID not in self.ListOfDowloads):
+            and self.ID != None and self.ID not in self.ListOfDowloads
+            and self.type == "File"):
             newbar = QProgressBar()
             newbar.setStyleSheet(STYLE)
             self.ListOfDowloads[self.ID] = [self.text, newbar]
@@ -230,3 +230,21 @@ class Cloud_Folder(QWidget):
         newFolder.setPath(path)
         self.pathToFolders[str(path)] = newFolder
         self.updateWindow()
+
+    def changeName(self, name, type):
+        if type == "File":
+            files = []
+            for text, id in self.pathToFolders[str(self.UserTree.currentItem())].files:
+                if text == self.text:
+                     text = name + self.text[self.text.rfind('.'):]
+                files.append((text, id))
+            self.pathToFolders[str(self.UserTree.currentItem())].files = files
+            self.updateWindow()
+        else:
+            if len(self.WindowForUserFolders.selectedItems()) != 0:
+                self.ListOfUserFolders[self.ID].changeName(name)
+                self.ListOfUserFolders[self.ID].path.setText(0, name)
+                self.updateWindow()
+            else:
+                self.pathToFolders[str(self.UserTree.currentItem())].changeName(name)
+                self.pathToFolders[str(self.UserTree.currentItem())].path.setText(0, name)
