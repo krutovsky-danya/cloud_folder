@@ -5,7 +5,7 @@ Created on Tue Mar 12 19:20:42 2019
 @author: Даня
 """
 
-import csv
+import csv, os
 from PyQt5.QtGui import (QPixmap,
                          QIcon)
 from PyQt5.QtCore import (Qt,
@@ -249,6 +249,7 @@ class Cloud_Folder(QWidget):
         self.WindowForUploadings.setFixedSize(300, 300)
 
     def startNewUploading(self, path, host, port):
+        print(os.path.getsize(path))
         name = path[path.rfind('/') + 1:]
         if self.pathToFolders[str(self.UserTree.currentItem())].id not in self.ListOfUploads:
             self.ListOfUploads[self.pathToFolders[str(self.UserTree.currentItem())].id] = []
