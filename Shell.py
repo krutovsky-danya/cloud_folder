@@ -13,6 +13,7 @@ from PyQt5.QtCore import (QSize, QTimer, Qt, pyqtSignal)
 from PyQt5.Qt import QEvent
 from PyQt5.QtWidgets import (QLabel,
                              QVBoxLayout,
+                             QHBoxLayout,
                              QPushButton,
                              QWidget,
                              QMainWindow,
@@ -23,7 +24,8 @@ from PyQt5.QtWidgets import (QLabel,
                              qApp,
                              QSizePolicy,
                              QToolButton,
-                             QMenu)
+                             QMenu,
+                             QDialog)
 
 from Cloud_Folder import Cloud_Folder
 from nanachi import nanachi
@@ -37,22 +39,30 @@ class Shell(QMainWindow):
                                   'Upload to server':'Upload.png',
                                   'Delete':'Delete.png',
                                   'Find someone':'Find_someone.png',
-                                  'Sign out':'logOut.png'}
+                                  'Sign out':'logOut.png',
+                                  'New folder':'new_folder.png',
+                                  'Change name':'change_name.png' }
         self.listOfAnimeIcons = {'Download from server':'Download.jpg',
                                   'Upload to server':'Upload.jpg',
                                   'Delete':'Delete.jpg',
                                   'Find someone':'Find_somechan.png',
-                                  'Sign out':'sleepy.jpg'}
+                                  'Sign out':'sleepy.jpg',
+                                  'New folder':'new_folder.png',
+                                  'Change name':'change_name.png'}
         self.listOfCuteIcons = {'Download from server':'',
                                   'Upload to server':'',
                                   'Delete':'',
                                   'Find someone':'',
-                                  'Sign out':''}
+                                  'Sign out':'',
+                                  'New Folder':'',
+                                  'Change name':''}
         self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
                                 ['Upload.png','Upload to server', self.Upload],
                                 ['Delete.png', 'Delete', self.Delete],
                                 ['Find_someone.png', 'Find someone', self.Find_someone],
-                                ['logOut.png', 'Sign out', self.signOut]]
+                                ['new_folder.png', 'New folder', self.New_folder],
+                                ['change_name.png', 'Change name', self.Change_name],
+                                ['logOut.png', 'Sign out', self.signOut],]
 
         self.toolbar = self.addToolBar('Commands')
         self.toolbar.setMovable(False)
@@ -291,6 +301,58 @@ class Shell(QMainWindow):
             self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfAnimeIcons[i]))
         self.normal.setIcon(QIcon('Icons//supa.png'))
 
+    def New_folder(self):
+        if len(self.main_widget.UserTree.selectedItems()) != 0:
+            self.new_folderDialog = QDialog(self.main_widget)
+            self.new_folderDialog.setWindowTitle("New folder")
+            layout = QVBoxLayout()
+            textlabel = QLabel("Новая папка будет создана в: " + (self.main_widget.UserTree.currentItem().text(0)))
+            layout.addWidget(textlabel)
+            tasklabel = QLabel("Введите название:")
+            layout.addWidget(tasklabel)
+            self.new_folderName = QLineEdit()
+            layout.addWidget(self.new_folderName)
+            self.new_folderInError = QLabel("Недопустимое название папки")
+            layout.addWidget(self.new_folderInError)
+            self.new_folderInError.setStyleSheet("QLabel { color : red; }")
+            self.new_folderInError.setVisible(False)
+            buttonLayout = QHBoxLayout()
+            okButton = QPushButton("OK")
+            okButton.clicked.connect(self.new_folderOK)
+            buttonLayout.addWidget(okButton)
+            cancelButton = QPushButton("Cancel")
+            cancelButton.clicked.connect(lambda: self.new_folderDialog.close())
+            buttonLayout.addWidget(cancelButton)
+            layout.addLayout(buttonLayout)
+            self.new_folderDialog.setLayout(layout)
+            self.new_folderDialog.exec_()
+
+    def new_folderOK(self):
+        name = self.new_folderName.text()
+        if (name in  [self.main_widget.ListOfUserFolders[i].getName() for i in self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].folders]
+            or name == ''):
+            self.new_folderInError.setVisible(True)
+            self.new_folderName.setText(None)
+        else:
+            self.client = socket.socket()
+            self.client.connect((self.host, self.port))
+            self.client.send("NewFolder".encode())
+            self.client.recv(1024).decode()
+            self.client.send(name.encode())
+
+            self.client.recv(1024).decode()
+            self.client.send(str(max(self.main_widget.ListOfUserFolders) + 1).encode())
+
+            self.client.recv(1024).decode()
+            self.client.send(str(self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].id).encode())
+            self.client.recv(1024).decode()
+            self.client.close()
+
+            self.main_widget.newFolder(name)
+            self.new_folderDialog.close()
+
+    def Change_name(self):
+        pass
 
     def eventFilter(self, obj, event):
         if obj.objectName() == 'ShowListOfDownloads':

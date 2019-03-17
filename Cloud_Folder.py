@@ -91,10 +91,12 @@ class Cloud_Folder(QWidget):
             for file, id in self.FilesDataFromServer[parent]:
                 self.ListOfUserFolders[int(parent)].addFile((file, id))
 
+
+
         self.pathToFolders = {}
 
         self.createUserSide()
-        self.createUserFolder()
+        self.WindowForUserFolders = QListWidget()
 
         #createServerFolders
         #createServerTree
@@ -118,10 +120,6 @@ class Cloud_Folder(QWidget):
         self.pathToFolders[str(newFolder)] = obj
         for folder in obj.folders:
             self.createTree(parent = newFolder, obj = self.ListOfUserFolders[folder])
-
-    def createUserFolder(self):
-        self.WindowForUserFolders = QListWidget()
-        #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     def updateWindow(self):
         self.WindowForUserFolders.clear()
@@ -218,3 +216,17 @@ class Cloud_Folder(QWidget):
             self.updateWindowForProgBars()
             self.updateWindow()
             self.WindowForProgBars.setFixedHeight(70 * len(self.ListOfDowloads))
+
+    def newFolder(self, name):
+        id = max(self.ListOfUserFolders) + 1
+        parent_id = self.pathToFolders[str(self.UserTree.currentItem())].id
+        newFolder = Folder(name = name, id = id)
+        self.ListOfUserFolders[parent_id].addFolder(id)
+        self.ListOfUserFolders[id] = newFolder
+        parent = self.UserTree.currentItem()
+
+        path = QTreeWidgetItem(parent, [name])
+        path.setIcon(0, QIcon(QPixmap('Icons//Folder.png')))
+        newFolder.setPath(path)
+        self.pathToFolders[str(path)] = newFolder
+        self.updateWindow()
