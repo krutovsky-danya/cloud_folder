@@ -22,6 +22,7 @@ from PyQt5.QtWidgets import (QHBoxLayout,
 from Folder import Folder
 from QCustomWidget import QCustomQWidget
 from ThreadForDownloading import ThreadForDownloading
+from ThreadForUploading import ThreadForUploading
 
 STYLE = """
 QProgressBar{
@@ -44,8 +45,13 @@ class Cloud_Folder(QWidget):
         self.ListOfDowloads = {} #Костыли
         self.ListOfDownloadThreads = []
         self.CopyOfBars = {}
-
         self.createWindowForProgBars()
+
+
+        self.ListOfUploads = {}
+        self.listOfUploadThreads = []
+        self.createWindowForUploadings()
+
 
         self.user_id = 0 #А вообще это загружается при логине
         self.FoldersDataFromServer = []
@@ -87,11 +93,13 @@ class Cloud_Folder(QWidget):
                 self.ListOfUserFolders[parent_id].addFolder(id)
             self.ListOfUserFolders[id] = newFolder
 
+        self.max_idOfFiles = -1
+
         for parent in self.FilesDataFromServer:
             for file, id in self.FilesDataFromServer[parent]:
+                if id > self.max_idOfFiles:
+                    self.max_idOfFiles = id
                 self.ListOfUserFolders[int(parent)].addFile((file, id))
-
-
 
         self.pathToFolders = {}
 
@@ -129,6 +137,7 @@ class Cloud_Folder(QWidget):
             myQCustomQWidget.setText(self.ListOfUserFolders[index].getName())
             myQCustomQWidget.setType("Folder")
             myQCustomQWidget.setObject(self.ListOfUserFolders[index].path)
+            myQCustomQWidget.setID(index)
             myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
             myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
             self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
@@ -147,6 +156,18 @@ class Cloud_Folder(QWidget):
             myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
             self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
             myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
+
+        if self.pathToFolders[str(self.UserTree.currentItem())].id in self.ListOfUploads:
+            for text, id in self.ListOfUploads[self.pathToFolders[str(self.UserTree.currentItem())].id]:
+                myQCustomQWidget = QCustomQWidget()
+                myQCustomQWidget.setText(text)
+                myQCustomQWidget.setType("UploadingFile")
+                myQCustomQWidget.setUploadStatus()
+                myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
+                myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
+                self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+                myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
+
         self.WindowForUserFolders.itemClicked.connect(self.item_clicked)
         self.WindowForUserFolders.itemDoubleClicked.connect(self.item_double_clicked)
         #Весь этот костыль с дубликатами баров нужен, потому что я не могу дублировать один и тот же бар в оба окна.
@@ -181,7 +202,8 @@ class Cloud_Folder(QWidget):
 
     def startNewDownloading(self):
         if ((len(self.WindowForUserFolders.selectedItems())) != 0
-            and self.ID != None and self.ID not in self.ListOfDowloads):
+            and self.ID != None and self.ID not in self.ListOfDowloads
+            and self.type == "File"):
             newbar = QProgressBar()
             newbar.setStyleSheet(STYLE)
             self.ListOfDowloads[self.ID] = [self.text, newbar]
@@ -217,6 +239,52 @@ class Cloud_Folder(QWidget):
             self.updateWindow()
             self.WindowForProgBars.setFixedHeight(70 * len(self.ListOfDowloads))
 
+    def createWindowForUploadings(self):
+        self.WindowForUploadings = QWidget()
+        self.ListForUploadings = QListWidget()
+        layout = QHBoxLayout()
+        layout.addWidget(self.ListForUploadings)
+        self.WindowForUploadings.setLayout(layout)
+        self.WindowForUploadings.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool) #Убирает рамку и заголовок, окно не отображается в панели задач
+        self.WindowForUploadings.setFixedSize(300, 300)
+
+    def startNewUploading(self, path, host, port):
+        name = path[path.rfind('/') + 1:]
+        if self.pathToFolders[str(self.UserTree.currentItem())].id not in self.ListOfUploads:
+            self.ListOfUploads[self.pathToFolders[str(self.UserTree.currentItem())].id] = []
+        self.ListOfUploads[self.pathToFolders[str(self.UserTree.currentItem())].id].append((name, self.max_idOfFiles + 1))
+        print(self.ListOfUploads)
+        self.updateWindowForUploadings()
+        self.updateWindow()
+        newthread = ThreadForUploading(name, self.max_idOfFiles + 1, self.pathToFolders[str(self.UserTree.currentItem())].id, path, host, port)
+        newthread.signal.connect(self.updateStatusForUploading)
+        self.listOfUploadThreads.append(newthread)
+        self.max_idOfFiles += 1
+        newthread.start()
+
+    def updateWindowForUploadings(self):
+        self.ListForUploadings.clear()
+        for parent in self.ListOfUploads:
+            for text, id in self.ListOfUploads[parent]:
+                myQCustomQWidget = QCustomQWidget()
+                myQCustomQWidget.setText(text)
+                myQCustomQWidget.setUploadStatus()
+                myQListWidgetItem = QListWidgetItem(self.ListForUploadings)
+                myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
+                self.ListForUploadings.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+                myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
+
+    def updateStatusForUploading(self, data):
+        name, parent_id, id = data
+        for i in range(len(self.ListOfUploads[parent_id])):
+            if self.ListOfUploads[parent_id][i][1] == id:
+                self.ListOfUploads[parent_id].pop(i)
+                break
+        self.ListOfUserFolders[parent_id].files.append((name, id))
+        self.updateWindow()
+        self.updateWindowForUploadings()
+
+
     def newFolder(self, name):
         id = max(self.ListOfUserFolders) + 1
         parent_id = self.pathToFolders[str(self.UserTree.currentItem())].id
@@ -230,3 +298,21 @@ class Cloud_Folder(QWidget):
         newFolder.setPath(path)
         self.pathToFolders[str(path)] = newFolder
         self.updateWindow()
+
+    def changeName(self, name, type):
+        if type == "File":
+            files = []
+            for text, id in self.pathToFolders[str(self.UserTree.currentItem())].files:
+                if text == self.text:
+                     text = name + self.text[self.text.rfind('.'):]
+                files.append((text, id))
+            self.pathToFolders[str(self.UserTree.currentItem())].files = files
+            self.updateWindow()
+        else:
+            if len(self.WindowForUserFolders.selectedItems()) != 0:
+                self.ListOfUserFolders[self.ID].changeName(name)
+                self.ListOfUserFolders[self.ID].path.setText(0, name)
+                self.updateWindow()
+            else:
+                self.pathToFolders[str(self.UserTree.currentItem())].changeName(name)
+                self.pathToFolders[str(self.UserTree.currentItem())].path.setText(0, name)

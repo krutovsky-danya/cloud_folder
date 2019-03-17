@@ -55,3 +55,7 @@ class QCustomQWidget (QWidget):
         gif = QMovie(path)
         self.textLabel.setMovie(gif)
         gif.start()
+
+    def setUploadStatus(self):#Потом с прогресс барами для загрузок разберемся, пока так
+        text = QLabel("Uploading")
+        self.layout.addWidget(text)
