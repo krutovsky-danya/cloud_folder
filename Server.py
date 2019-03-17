@@ -78,6 +78,27 @@ def mainThread(client, address):
         else:
             commands[address[0]].append(["ChangeName", type, id, name, parent_id])
 
+    elif command == "Uploading":
+        client.send("Ready".encode())
+        name = client.recv(1024).decode()
+        client.send("Ready".encode())
+        id = client.recv(1024).decode()
+        client.send("Ready".encode())
+        parent_id = client.recv(1024).decode()
+        client.send("Ready".encode())
+        file = open("UsersData//" + activeUsers[address[0]] + "//Files//" + id, 'wb')
+        l = client.recv(1024)
+        while (l):
+            if len(l) < 1024:
+                break
+            file.write(l)
+            l = client.recv(1024)
+        file.write(l)
+        file.close()
+        client.send("Ready".encode())
+        client.close()
+        commands[address[0]].append(["Uploading", name, id, parent_id])
+
     elif command == "Exit":
         client.send("Ready".encode())
         client.close()
@@ -129,6 +150,9 @@ def mainThread(client, address):
                             if FilesDataFromServer[data[4]][i][1] == int(data[2]):
                                 FilesDataFromServer[data[4]][i] = (data[3], int(data[2]))
                                 break
+                elif data[0] == "Uploading":
+                    FilesDataFromServer[data[3]].append((data[1], int(data[2])))
+
             #Сохраняем
             with open("UsersData//" + activeUsers[address[0]] +"//FoldersDataFromServer.csv", 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile, delimiter=' ', quotechar='|',
