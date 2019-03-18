@@ -192,7 +192,7 @@ def mainThread(client, address):
             del activeUsers[address[0]]
             del commands[address[0]]
 
-host = 'localhost'
+host = '0.0.0.0'
 port = 60000
 
 server = socket.socket()
