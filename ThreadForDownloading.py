@@ -7,36 +7,36 @@ class ThreadForDownloading(QThread):
 
     progress_signal = pyqtSignal(list) #По какой-то причине у сигналов такой синтаксис
 
-    def __init__(self, ID, text):
+    def __init__(self, ID, text, host, port, path):
         super().__init__()
         self.ID = ID
         self.text = text
         self.percent = 0
+        self.host = host
+        self.port = port
+        self.path = path
 
     def run(self):
-        self.host = 'localhost'
-        self.port = 60000
-
-        self.client = socket.socket()
-        self.client.connect((self.host, self.port))
-        connecion = self.client.recv(1024)
-        self.client.send(self.ID.encode())
-        size = self.client.recv(1024)
-        self.client.send("Launch".encode())
-        path = QFileDialog.getExistingDirectory(self, "Open a folder",
-                                                '//home', QFileDialog.ShowDirsOnly)
-        file = open(path + self.text, 'wb')
-        l = self.client.recv(1024)
+        client = socket.socket()
+        client.connect((self.host, self.port))
+        client.send("Download".encode())
+        client.recv(1024).decode()
+        client.send(str(self.ID).encode())
+        size = client.recv(1024).decode()
+        client.send("Ready".encode())
+        file = open(self.path + '/' + self.text, 'wb')
         downloaded = 0
-        while self.percent != 100:
-            if len(l) < 1024:
-                self.percent = 100
-                break
-            self.percent = downloaded / size
-            self.progress_signal.emit([self.ID, self.percent]) #Отправляем обратно пару ID - процент
+        l = client.recv(1024)
+        downloaded += len(l)
+        while downloaded < int(size):#Отправляем обратно пару ID - процент
             file.write(l)
+            self.percent = downloaded / int(size) * 100
+            self.progress_signal.emit([self.ID, self.percent])
+            l = client.recv(1024)
             downloaded += len(l)
-            l = self.client.recv(1024)
         file.write(l)
         file.close()
-        self.client.send('Sucsess'.encode())
+        self.percent = downloaded / int(size) * 100
+        self.progress_signal.emit([self.ID, self.percent])
+        client.send('Ready'.encode())
+        client.close()

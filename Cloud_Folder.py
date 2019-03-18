@@ -16,7 +16,8 @@ from PyQt5.QtWidgets import (QHBoxLayout,
                              QWidget,
                              QListWidget,
                              QListWidgetItem,
-                             QProgressBar)
+                             QProgressBar,
+                             QFileDialog)
 
 
 from Folder import Folder
@@ -200,7 +201,7 @@ class Cloud_Folder(QWidget):
         self.WindowForProgBars.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool) #Убирает рамку и заголовок, окно не отображается в панели задач
         self.WindowForProgBars.setFixedSize(375, 170)
 
-    def startNewDownloading(self):
+    def startNewDownloading(self, host, port):
         if ((len(self.WindowForUserFolders.selectedItems())) != 0
             and self.ID != None and self.ID not in self.ListOfDowloads
             and self.type == "File"):
@@ -209,7 +210,9 @@ class Cloud_Folder(QWidget):
             self.ListOfDowloads[self.ID] = [self.text, newbar]
             self.updateWindowForProgBars()
             self.updateWindow()
-            newthread = ThreadForDownloading(self.ID, self.text)
+            path = QFileDialog.getExistingDirectory(self, "Open a folder",
+                                                    '//home', QFileDialog.ShowDirsOnly)
+            newthread = ThreadForDownloading(self.ID, self.text, host, port, path)
             newthread.progress_signal.connect(self.updateValuesOfProgBars)
             self.ListOfDownloadThreads.append(newthread)
             self.WindowForProgBars.setFixedHeight(60 * len(self.ListOfDowloads))

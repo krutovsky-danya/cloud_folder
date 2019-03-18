@@ -271,12 +271,7 @@ class Shell(QMainWindow):
         self.setGeometry(300, 300, 600, 300)
 
     def Download(self):
-        if (len(self.main_widget.WindowForUserFolders.selectedItems()) != 0 and self.main_widget.ID != None
-            and self.main_widget.type == "File"):
-            print(self.main_widget.ID)
-            name = self.main_widget.text
-
-        self.main_widget.startNewDownloading()  #Смотри Cloud_Folder
+        self.main_widget.startNewDownloading(self.host, self.port)  #Смотри Cloud_Folder
 
     def Upload(self):
         print("Upload")
@@ -306,7 +301,6 @@ class Shell(QMainWindow):
             layout.addLayout(buttonLayout)
             self.uploadingDialog.setLayout(layout)
             self.uploadingDialog.exec_()
-            #self.main_widget.startNewUploading(path[0], self.host, self.port)
 
     def uploadingDialogOK(self):
         self.main_widget.startNewUploading(self.path[0], self.host, self.port)
@@ -507,7 +501,7 @@ class Shell(QMainWindow):
     def closeEvent(self, event):
         if len(self.main_widget.ListOfDowloads) != 0:
             areYouShure = QMessageBox()
-            areYouShure.setIcon(QMessageBox.Icon=QIcon('Icons//HirosavaYuri.jpg'))
+            #areYouShure.setIcon(QMessageBox.Icon=QIcon('Icons//HirosavaYuri.jpg'))
             areYouShure.setText('You have unfinished deals...')
             areYouShure.setDefaultButton(QMessageBox.StandardButtons(QMessageBox.Ok))
         else:
