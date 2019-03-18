@@ -106,6 +106,20 @@ def mainThread(client, address):
         client.close()
         commands[address[0]].append(["Uploading", name, id, parent_id])
 
+    elif command == "Download":
+        client.send("Ready")
+        ID = str(client.recv(1024))
+        client.send(os.path.getsize("UsersData//" + login + 'Files//' + ID).encode())
+        accept = client.recv(1024)
+        file = open('Files//' + ID, 'rb')
+        l = file.read(1024)
+        while(l):
+            cleint.send(l)
+            l = file.read(1024)
+        file.close()
+        client.recv(1024)
+        client.close()
+    
     elif command == "Exit":
         client.send("Ready".encode())
         client.close()
