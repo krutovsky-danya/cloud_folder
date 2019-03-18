@@ -1,4 +1,4 @@
-import socket, csv, threading
+import socket, csv, threading, os
 
 def mainThread(client, address):
     print("New thread for", str(address))
@@ -98,7 +98,6 @@ def mainThread(client, address):
             file.write(l)
             l = client.recv(1024)
             localsize += len(l)
-            print(localsize)
         file.write(l)
         file.close()
         print("Done")
@@ -107,19 +106,22 @@ def mainThread(client, address):
         commands[address[0]].append(["Uploading", name, id, parent_id])
 
     elif command == "Download":
-        client.send("Ready")
-        ID = str(client.recv(1024))
-        client.send(os.path.getsize("UsersData//" + login + 'Files//' + ID).encode())
-        accept = client.recv(1024)
-        file = open('Files//' + ID, 'rb')
+        client.send("Ready".encode())
+        print("Done1")
+        ID = client.recv(1024).decode()
+        print(ID)
+        client.send(str(os.path.getsize("UsersData//" + activeUsers[address[0]] + '//Files//' + ID)).encode())
+        print("Done3")
+        client.recv(1024).decode()
+        file = open("UsersData//" + activeUsers[address[0]] + '//Files//' + ID, 'rb')
         l = file.read(1024)
         while(l):
-            cleint.send(l)
+            client.send(l)
             l = file.read(1024)
         file.close()
-        client.recv(1024)
+        client.recv(1024).decode()
         client.close()
-    
+
     elif command == "Exit":
         client.send("Ready".encode())
         client.close()
