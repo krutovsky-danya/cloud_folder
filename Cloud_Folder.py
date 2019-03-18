@@ -209,7 +209,7 @@ class Cloud_Folder(QWidget):
             self.ListOfDowloads[self.ID] = [self.text, newbar]
             self.updateWindowForProgBars()
             self.updateWindow()
-            newthread = ThreadForDownloading(self.ID)
+            newthread = ThreadForDownloading(self.ID, self.text)
             newthread.progress_signal.connect(self.updateValuesOfProgBars)
             self.ListOfDownloadThreads.append(newthread)
             self.WindowForProgBars.setFixedHeight(60 * len(self.ListOfDowloads))

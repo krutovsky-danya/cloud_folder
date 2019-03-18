@@ -25,7 +25,8 @@ from PyQt5.QtWidgets import (QLabel,
                              QSizePolicy,
                              QToolButton,
                              QMenu,
-                             QDialog)
+                             QDialog,
+                             QMessageBox)
 
 from Cloud_Folder import Cloud_Folder
 from nanachi import nanachi
@@ -322,7 +323,7 @@ class Shell(QMainWindow):
             spamwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow(["False"] + [""] + [""])
-        self.signIn()
+        self.close()
 
     def changeThemeToNormal(self):
         for i in self.listOfActions:
@@ -504,8 +505,14 @@ class Shell(QMainWindow):
         return QWidget.eventFilter(self, obj, event)
 
     def closeEvent(self, event):
-        self.client = socket.socket()
-        self.client.connect((self.host, self.port))
-        self.client.send("Exit".encode())
-        self.client.recv(1024).decode()
-        self.client.close()
+        if len(self.main_widget.ListOfDowloads) != 0:
+            areYouShure = QMessageBox()
+            areYouShure.setIcon(QMessageBox.Icon=QIcon('Icons//HirosavaYuri.jpg'))
+            areYouShure.setText('You have unfinished deals...')
+            areYouShure.setDefaultButton(QMessageBox.StandardButtons(QMessageBox.Ok))
+        else:
+            self.client = socket.socket()
+            self.client.connect((self.host, self.port))
+            self.client.send("Exit".encode())
+            self.client.recv(1024).decode()
+            self.client.close()
