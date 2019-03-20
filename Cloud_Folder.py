@@ -112,6 +112,7 @@ class Cloud_Folder(QWidget):
 
         self.createUserSide()
         self.WindowForUserFolders = QListWidget()
+        #self.WindowForUserFolders.setStyleSheet("{background-image: url(://Icons//Elisium.png);}")
 
         self.WindowForServerFolders = QListWidget()
         self.createServerSide()
