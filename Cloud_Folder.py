@@ -8,8 +8,7 @@ Created on Tue Mar 12 19:20:42 2019
 import csv, os
 from PyQt5.QtGui import (QPixmap,
                          QIcon)
-from PyQt5.QtCore import (Qt,
-                          pyqtSignal)
+from PyQt5.QtCore import (Qt)
 from PyQt5.QtWidgets import (QHBoxLayout,
                              QTreeWidget,
                              QTreeWidgetItem,
@@ -94,6 +93,13 @@ class Cloud_Folder(QWidget):
                 self.ListOfUserFolders[parent_id].addFolder(id)
             self.ListOfUserFolders[id] = newFolder
 
+        self.ListOfServerFolders = {}
+        for name, id, parent_id in [['Server', 0, None]]:
+            newFolder = Folder(name = name, id = id)
+            if parent_id != None:
+                self.ListOfServerFolders[parent_id].addFolder(id)
+            self.ListOfServerFolders[id] = newFolder
+
         self.max_idOfFiles = -1
 
         for parent in self.FilesDataFromServer:
@@ -107,12 +113,14 @@ class Cloud_Folder(QWidget):
         self.createUserSide()
         self.WindowForUserFolders = QListWidget()
 
-        #createServerFolders
-        #createServerTree
+        self.WindowForServerFolders = QListWidget()
+        self.createServerSide()
 
         layout = QHBoxLayout()
         layout.addWidget(self.UserTree)
         layout.addWidget(self.WindowForUserFolders)
+        layout.addWidget(self.WindowForServerFolders)
+        layout.addWidget(self.ServerTree)
 
         self.setLayout(layout)
 
@@ -121,6 +129,12 @@ class Cloud_Folder(QWidget):
         self.UserTree.header().setVisible(False)
         self.createTree(parent = self.UserTree, obj = self.ListOfUserFolders[self.user_id])
         self.UserTree.itemSelectionChanged.connect(self.updateWindow)
+
+    def createServerSide(self):
+        self.ServerTree = QTreeWidget()
+        self.ServerTree.header().setVisible(False)
+        self.createTree(parent = self.ServerTree, obj = self.ListOfServerFolders[0])
+        self.ServerTree.itemSelectionChanged.connect(self.updateServerWindow)
 
     def createTree(self, parent = None, obj = None):
         newFolder = QTreeWidgetItem(parent, [obj.getName()])
@@ -176,6 +190,28 @@ class Cloud_Folder(QWidget):
         #обновив лист, тот питон ловит ошибку, что-то свзянное с удалением родителя/контролем мусора,
         #было лень до конца разбираться. Так что такой способ, где программа явно удаляет все бары до удаления их родителей
 
+    def updateServerWindow(self):
+        self.WindowForServerFolders.clear()
+        for text, id in [('B.jpg', 0),
+                         ('E.jpg', 0),
+                         ('S.jpg', 0),
+                         ('T.jpg', 0),
+                         ('G.jpg', 0),
+                         ('I.jpg', 0),
+                         ('R.jpg', 0),
+                         ('L.jpg', 0)]:
+            myQCustomQWidget = QCustomQWidget()
+            myQCustomQWidget.setText(text)
+            myQCustomQWidget.setID(id)
+            myQCustomQWidget.setType("File")
+
+            myQListWidgetItem = QListWidgetItem(self.WindowForServerFolders)
+            myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
+            self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+            myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
+        self.WindowForServerFolders.itemClicked.connect(self.serverItemClicked)
+        self.WindowForServerFolders.itemDoubleClicked.connect(self.serverItemDoubleClicked)
+
     def item_clicked(self, item):
         file = self.WindowForUserFolders.itemWidget(item)
         self.ID = file.getID()
@@ -183,9 +219,20 @@ class Cloud_Folder(QWidget):
         self.type = file.getType()
         self.text = file.getText()
 
+    def serverItemClicked(self, item):
+        file = self.WindowForServerFolders.itemWidget(item)
+        self.S_ID = file.getID()
+        self.S_obj = file.getObject()
+        self.S_type = file.getType()
+        self.S_text = file.getText()
+
     def item_double_clicked(self, item):
         if self.type == "Folder":
             self.UserTree.setCurrentItem(self.obj)
+
+    def serverItemDoubleClicked(self, item):
+        if self.S_type == "Folder":
+            self.ServerTree.setCurrentItem(self.S_obj)
 
     def createWindowForProgBars(self):
         self.WindowForProgBars = QWidget()

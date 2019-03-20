@@ -7,8 +7,7 @@ Created on Tue Mar 12 19:24:25 2019
 from PyQt5.QtGui import QMovie
 from PyQt5.QtWidgets import (QLabel,
                              QHBoxLayout,
-                             QWidget,
-                             QProgressBar)
+                             QWidget)
 
 class QCustomQWidget (QWidget):
     def __init__(self):

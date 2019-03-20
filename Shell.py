@@ -9,7 +9,7 @@ import csv, socket
 from PyQt5.QtGui import (QPixmap,
                          QIcon,
                          QMovie)
-from PyQt5.QtCore import (QSize, QTimer, Qt, pyqtSignal)
+from PyQt5.QtCore import (QSize, QTimer, Qt)
 from PyQt5.Qt import QEvent
 from PyQt5.QtWidgets import (QLabel,
                              QVBoxLayout,
@@ -105,7 +105,7 @@ class Shell(QMainWindow):
 
         self.setMinimumSize(300, 300)
 
-        self.host = 'localhost'
+        self.host = '91.143.169.244'
         self.port = 60000
         self.connectionStatus = False
 
@@ -125,6 +125,7 @@ class Shell(QMainWindow):
         self.gifLabel.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.gifLabel)
         widgetForConnecting.setLayout(layout)
+        #widgetForConnecting.setSizeHint(self.gifLabel.sizeHint())
         self.setCentralWidget(widgetForConnecting)
         self.setWindowTitle('Connecting')
         self.setWindowIcon(QIcon(QPixmap('Icons//hot.jpg')))
@@ -268,7 +269,7 @@ class Shell(QMainWindow):
         self.setCentralWidget(self.main_widget)
         self.setWindowTitle("Cloud Folder")
         self.setWindowIcon(QIcon(QPixmap('Icons//mega.jpg')))
-        self.setGeometry(300, 300, 600, 300)
+        self.setGeometry(50, 50, 1200, 600)
 
     def Download(self):
         self.main_widget.startNewDownloading(self.host, self.port)  #Смотри Cloud_Folder
@@ -500,10 +501,13 @@ class Shell(QMainWindow):
 
     def closeEvent(self, event):
         if len(self.main_widget.ListOfDowloads) != 0:
-            areYouShure = QMessageBox()
-            #areYouShure.setIcon(QMessageBox.Icon=QIcon('Icons//HirosavaYuri.jpg'))
-            areYouShure.setText('You have unfinished deals...')
-            areYouShure.setDefaultButton(QMessageBox.StandardButtons(QMessageBox.Ok))
+            reply = QMessageBox.question(self, "Warning!",
+                                         "You have unfinished deals...", QMessageBox.Ok)
+            if reply == QMessageBox.Ok:
+                event.ignore()
+            else:
+                event.ignore()
+
         else:
             self.client = socket.socket()
             self.client.connect((self.host, self.port))
