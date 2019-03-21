@@ -1,4 +1,4 @@
-import socket, csv, threading, os
+import socket, csv, threading, os, time
 
 def mainThread(client, address):
     print("New thread for", str(address))
@@ -110,10 +110,20 @@ def mainThread(client, address):
         print("Done1")
         ID = client.recv(1024).decode()
         print(ID)
-        client.send(str(os.path.getsize("UsersData//" + activeUsers[address[0]] + '//Files//' + ID)).encode())
-        print("Done3")
-        client.recv(1024).decode()
-        file = open("UsersData//" + activeUsers[address[0]] + '//Files//' + ID, 'rb')
+        time.sleep(5)
+        if ID[:2] != "0.":
+            client.send(str(os.path.getsize("UsersData//" + activeUsers[address[0]] + '//Files//' + ID)).encode())
+            print("Done3")
+            client.recv(1024).decode()
+            file = open("UsersData//" + activeUsers[address[0]] + '//Files//' + ID, 'rb')
+        else:
+            ID = ID[2:]
+            print(ID)
+            time.sleep(5)
+            client.send(str(os.path.getsize("OpenData//" + ID)).encode())
+            print("Done3")
+            client.recv(1024).decode()
+            file = open("OpenData//" + ID, 'rb')
         l = file.read(1024)
         while(l):
             client.send(l)
