@@ -16,6 +16,7 @@ class ThreadForDownloading(QThread):
         self.path = path
 
     def run(self):
+        print(34)
         client = socket.socket()
         client.connect((self.host, self.port))
         client.send("Download".encode())
