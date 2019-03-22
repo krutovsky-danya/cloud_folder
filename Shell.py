@@ -36,6 +36,9 @@ class Shell(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.backgrouds = {"Anime": ["CuteUserTree.jpg", "CuteUserFolders.jpg",
+                      "CuteServerFolders.jpg", "CuteServerTree.jpg"]}
+
         self.listOfNormalIcons = {'Download from server':'Download.png',
                                   'Upload to server':'Upload.png',
                                   'Delete':'Delete.png',
@@ -48,8 +51,8 @@ class Shell(QMainWindow):
                                   'Delete':'Delete.jpg',
                                   'Find someone':'Find_somechan.png',
                                   'Sign out':'sleepy.jpg',
-                                  'New folder':'new_folder.png',
-                                  'Change name':'change_name.png'}
+                                  'New folder':'thinking.png',
+                                  'Change name':'writing.png'}
         self.listOfCuteIcons = {'Download from server':'',
                                   'Upload to server':'',
                                   'Delete':'',
@@ -108,6 +111,8 @@ class Shell(QMainWindow):
         self.host = '84.201.133.206'
         self.port = 60000
         self.connectionStatus = False
+
+        self.style = "Normal"
 
         self.signIn()
 
@@ -275,7 +280,6 @@ class Shell(QMainWindow):
         self.main_widget.startNewDownloading(self.host, self.port)  #Смотри Cloud_Folder
 
     def Upload(self):
-        print("Upload")
         self.path = "Lul"
         self.path = QFileDialog.getOpenFileName(self, "File") #возвращает пару путь и еще что-то, непонятно, зачем
         name = self.path[0][self.path[0].rfind('/') + 1:]
@@ -323,11 +327,30 @@ class Shell(QMainWindow):
     def changeThemeToNormal(self):
         for i in self.listOfActions:
             self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfNormalIcons[i]))
+        self.main_widget.UserTree.setStyleSheet("background: white;")
+        self.main_widget.WindowForUserFolders.setStyleSheet("background: white;")
+        self.main_widget.WindowForServerFolders.setStyleSheet("background: white;")
+        self.main_widget.ServerTree.setStyleSheet("background: white;")
+        self.style = "Normal"
 
     def changeThemeToAnime(self):
         for i in self.listOfActions:
             self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfAnimeIcons[i]))
         self.normal.setIcon(QIcon('Icons//supa.png'))
+        self.style = "Anime"
+        self.backgroundChanger()
+
+    def backgroundChanger(self):
+        if self.style != "Normal":
+            x1, y1, x2, y2 = self.geometry().getCoords()
+            for path in self.backgrouds[self.style]:
+                image = QPixmap("Icons//" + path)
+                image = image.scaled((x2 + 50 - x1) / 4, y2 - 50 - y1)
+                image.save("Icons//Scaled" + path, "JPG")
+            self.main_widget.UserTree.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][0] + ");")
+            self.main_widget.WindowForUserFolders.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][1] + ");")
+            self.main_widget.WindowForServerFolders.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][2] + ");")
+            self.main_widget.ServerTree.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][3] + ");")
 
     def New_folder(self):
         if len(self.main_widget.UserTree.selectedItems()) != 0:
@@ -499,8 +522,11 @@ class Shell(QMainWindow):
 
         return QWidget.eventFilter(self, obj, event)
 
+    def resizeEvent(self, event):
+        self.backgroundChanger()
+
     def closeEvent(self, event):
-        if len(self.main_widget.ListOfDowloads) != 0:
+        if len(self.main_widget.ListOfDowloads) != 0 or len(self.main_widget.ListOfUploads) != 0:
             reply = QMessageBox.question(self, "Warning!",
                                          "You have unfinished deals...", QMessageBox.Ok)
             if reply == QMessageBox.Ok:

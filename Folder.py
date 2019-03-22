@@ -28,6 +28,3 @@ class Folder():
 
     def setPath(self, item):
         self.path = item
-
-    def setSelected(self):
-        self.path.setSelected(True)

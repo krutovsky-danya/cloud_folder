@@ -18,6 +18,7 @@ class QCustomQWidget (QWidget):
         self.setLayout(self.layout)
         self.obj = None
         self.id = None
+        self.setStyleSheet("background: transparent;")
 
     def setText(self, text):
         self.text = text
@@ -54,7 +55,3 @@ class QCustomQWidget (QWidget):
         gif = QMovie(path)
         self.textLabel.setMovie(gif)
         gif.start()
-
-    def setUploadStatus(self):#Потом с прогресс барами для загрузок разберемся, пока так
-        text = QLabel("Uploading")
-        self.layout.addWidget(text)

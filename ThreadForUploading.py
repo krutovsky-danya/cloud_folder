@@ -1,4 +1,4 @@
-import socket, os, time
+import socket, os
 from PyQt5.QtCore import (QThread,
                           pyqtSignal)
 
@@ -30,17 +30,14 @@ class ThreadForUploading(QThread):
         client.send(str(size).encode())
         client.recv(1024).decode()
         file = open(self.path, 'rb')
+        localsize = 0
         l = file.read(1024)
-        size += len(l)
-        #logfile = open('log.txt', 'wb')
         while (l):
             something = client.send(l)
-            #print(something)
-            #logfile.write((str(someting) + str(time.clock())).encode())
+            localsize += something
+            self.signal.emit([self.id, localsize / size * 100])
             l = file.read(1024)
-            size += len(l)
         file.close()
-        #logfile.close()
         client.recv(1024).decode()
         client.close()
-        self.signal.emit([self.name, self.parent_id, self.id])
+        self.signal.emit([self.id, "Finish"])

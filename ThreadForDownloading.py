@@ -4,7 +4,7 @@ from PyQt5.QtCore import (QThread,
 
 class ThreadForDownloading(QThread):
 
-    progress_signal = pyqtSignal(list) #По какой-то причине у сигналов такой синтаксис
+    progress_signal = pyqtSignal(list)
 
     def __init__(self, ID, text, host, port, path):
         super().__init__()
@@ -16,7 +16,6 @@ class ThreadForDownloading(QThread):
         self.path = path
 
     def run(self):
-        print(34)
         client = socket.socket()
         client.connect((self.host, self.port))
         client.send("Download".encode())
@@ -28,7 +27,7 @@ class ThreadForDownloading(QThread):
         downloaded = 0
         l = client.recv(1024)
         downloaded += len(l)
-        while downloaded < int(size):#Отправляем обратно пару ID - процент
+        while downloaded < int(size):
             file.write(l)
             self.percent = downloaded / int(size) * 100
             self.progress_signal.emit([self.ID, self.percent])
