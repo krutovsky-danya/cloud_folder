@@ -105,7 +105,7 @@ class Shell(QMainWindow):
 
         self.setMinimumSize(300, 300)
 
-        self.host = '91.143.169.244'
+        self.host = '84.201.133.206'
         self.port = 60000
         self.connectionStatus = False
 

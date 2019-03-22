@@ -193,14 +193,14 @@ class Cloud_Folder(QWidget):
 
     def updateServerWindow(self):
         self.WindowForServerFolders.clear()
-        for text, id in [('B.jpg', 0),
-                         ('E.jpg', 0),
-                         ('S.jpg', 0),
-                         ('T.jpg', 0),
-                         ('G.jpg', 0),
-                         ('I.jpg', 0),
-                         ('R.jpg', 0),
-                         ('L.jpg', 0)]:
+        for text, id in [('B.jpg', 0.1),
+                         ('E.jpg', 0.1),
+                         ('S.jpg', 0.1),
+                         ('T.jpg', 0.1),
+                         ('G.jpg', 0.1),
+                         ('I.jpg', 0.1),
+                         ('R.jpg', 0.1),
+                         ('L.jpg', 0.1)]:
             myQCustomQWidget = QCustomQWidget()
             myQCustomQWidget.setText(text)
             myQCustomQWidget.setID(id)
@@ -208,7 +208,7 @@ class Cloud_Folder(QWidget):
 
             myQListWidgetItem = QListWidgetItem(self.WindowForServerFolders)
             myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
-            self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+            self.WindowForServerFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
             myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
         self.WindowForServerFolders.itemClicked.connect(self.serverItemClicked)
         self.WindowForServerFolders.itemDoubleClicked.connect(self.serverItemDoubleClicked)
@@ -219,6 +219,7 @@ class Cloud_Folder(QWidget):
         self.obj = file.getObject()
         self.type = file.getType()
         self.text = file.getText()
+        self.mode = 'U'
 
     def serverItemClicked(self, item):
         file = self.WindowForServerFolders.itemWidget(item)
@@ -226,6 +227,9 @@ class Cloud_Folder(QWidget):
         self.S_obj = file.getObject()
         self.S_type = file.getType()
         self.S_text = file.getText()
+        self.mode = 'S'
+        print(23)
+
 
     def item_double_clicked(self, item):
         if self.type == "Folder":
@@ -250,21 +254,38 @@ class Cloud_Folder(QWidget):
         self.WindowForProgBars.setFixedSize(375, 170)
 
     def startNewDownloading(self, host, port):
-        if ((len(self.WindowForUserFolders.selectedItems())) != 0
-            and self.ID != None and self.ID not in self.ListOfDowloads
-            and self.type == "File"):
-            newbar = QProgressBar()
-            newbar.setStyleSheet(STYLE)
-            self.ListOfDowloads[self.ID] = [self.text, newbar]
-            self.updateWindowForProgBars()
-            self.updateWindow()
-            path = QFileDialog.getExistingDirectory(self, "Open a folder",
-                                                    '//home', QFileDialog.ShowDirsOnly)
-            newthread = ThreadForDownloading(self.ID, self.text, host, port, path)
-            newthread.progress_signal.connect(self.updateValuesOfProgBars)
-            self.ListOfDownloadThreads.append(newthread)
-            self.WindowForProgBars.setFixedHeight(60 * len(self.ListOfDowloads))
-            newthread.start() #Создали поток для нового бара, запихнули его в словарь, обновили главный лист и всплывающее окно
+        if self.mode == 'U':
+            if ((len(self.WindowForUserFolders.selectedItems())) != 0
+                and self.ID != None and self.ID not in self.ListOfDowloads
+                and self.type == "File"):
+                newbar = QProgressBar()
+                newbar.setStyleSheet(STYLE)
+                self.ListOfDowloads[self.ID] = [self.text, newbar]
+                self.updateWindowForProgBars()
+                self.updateWindow()
+                path = QFileDialog.getExistingDirectory(self, "Open a folder",
+                                                        '//home', QFileDialog.ShowDirsOnly)
+                newthread = ThreadForDownloading(self.ID, self.text, host, port, path)
+                newthread.progress_signal.connect(self.updateValuesOfProgBars)
+                self.ListOfDownloadThreads.append(newthread)
+                self.WindowForProgBars.setFixedHeight(60 * len(self.ListOfDowloads))
+                newthread.start() #Создали поток для нового бара, запихнули его в словарь, обновили главный лист и всплывающее окно
+            if self.mode == 'S':
+                if ((len(self.WindowForServerFolders.selectedItems())) != 0
+                    and self.S_ID != None and self.S_ID not in self.ListOfDowloads
+                    and self.S_type == "File"):
+                    newbar = QProgressBar()
+                    newbar.setStyleSheet(STYLE)
+                    self.ListOfDowloads[self.S_ID] = [self.S_text, newbar]
+                    self.updateWindowForProgBars()
+                    self.updateWindow()
+                    path = QFileDialog.getExistingDirectory(self, "Open a folder",
+                                                            '//home', QFileDialog.ShowDirsOnly)
+                    newthread = ThreadForDownloading(self.S_ID, self.S_text, host, port, path)
+                    newthread.progress_signal.connect(self.updateValuesOfProgBars)
+                    self.ListOfDownloadThreads.append(newthread)
+                    self.WindowForProgBars.setFixedHeight(60 * len(self.ListOfDowloads))
+                    newthread.start() #Создали поток для нового бара, запихнули его в словарь, обновили главный лист и всплывающее окно
 
     #Тут вроде все понятно
     def updateWindowForProgBars(self):
