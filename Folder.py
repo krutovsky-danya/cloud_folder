@@ -12,7 +12,7 @@ class Folder():
         self.parent_id = parent_id
         self.folders = []
         self.files = []
-        self.path = None #Это же все таки путь
+        self.path = None 
 
     def changeName(self, name):
         self.name = name

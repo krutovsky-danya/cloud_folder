@@ -26,7 +26,8 @@ from PyQt5.QtWidgets import (QLabel,
                              QToolButton,
                              QMenu,
                              QDialog,
-                             QMessageBox)
+                             QMessageBox,
+                             QToolBar)
 
 from Cloud_Folder import Cloud_Folder
 from nanachi import nanachi
@@ -36,40 +37,37 @@ class Shell(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.backgrouds = {"Anime": ["CuteUserTree.jpg", "CuteUserFolders.jpg",
-                      "CuteServerFolders.jpg", "CuteServerTree.jpg"]}
+        self.backgrouds = {"Anime": ["CuteUserTree.jpg", "CuteUserFolders.jpg"]}
 
         self.listOfNormalIcons = {'Download from server':'Download.png',
                                   'Upload to server':'Upload.png',
                                   'Delete':'Delete.png',
-                                  'Find someone':'Find_someone.png',
                                   'Sign out':'logOut.png',
                                   'New folder':'new_folder.png',
                                   'Change name':'change_name.png' }
         self.listOfAnimeIcons = {'Download from server':'Download.jpg',
                                   'Upload to server':'Upload.jpg',
                                   'Delete':'Delete.jpg',
-                                  'Find someone':'Find_somechan.png',
                                   'Sign out':'sleepy.jpg',
                                   'New folder':'thinking.png',
                                   'Change name':'writing.png'}
         self.listOfCuteIcons = {'Download from server':'',
                                   'Upload to server':'',
                                   'Delete':'',
-                                  'Find someone':'',
                                   'Sign out':'',
                                   'New Folder':'',
                                   'Change name':''}
         self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
                                 ['Upload.png','Upload to server', self.Upload],
                                 ['Delete.png', 'Delete', self.Delete],
-                                ['Find_someone.png', 'Find someone', self.Find_someone],
                                 ['new_folder.png', 'New folder', self.New_folder],
                                 ['change_name.png', 'Change name', self.Change_name],
                                 ['logOut.png', 'Sign out', self.signOut],]
 
-        self.toolbar = self.addToolBar('Commands')
+        self.toolbar = QToolBar()
+        self.addToolBar(Qt.TopToolBarArea, self.toolbar)
         self.toolbar.setMovable(False)
+        self.toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
 
         self.listOfActions  = {}
 
@@ -92,7 +90,7 @@ class Shell(QMainWindow):
         self.toolbar.addWidget(self.changer)
 
         self.spacer = QWidget()
-        self.spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) #Отодвигаем кнопку с загрузками
+        self.spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.toolbar.addWidget(self.spacer)
 
         for path, text in [("Icons//listofdowloads.png", 'ShowListOfDownloads'),
@@ -104,11 +102,11 @@ class Shell(QMainWindow):
             button.setIconSize(QSize(25, 25))
             self.toolbar.addWidget(button)
 
-        qApp.installEventFilter(self) #Магическая штука, включающая отслеживание мыши, на сколько я понимаю
+        qApp.installEventFilter(self)
 
         self.setMinimumSize(300, 300)
 
-        self.host = '84.201.133.206'
+        self.host = 'localhost'
         self.port = 60000
         self.connectionStatus = False
 
@@ -235,7 +233,6 @@ class Shell(QMainWindow):
                         spamwriter = csv.writer(csvfile, delimiter=' ',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
                         spamwriter.writerow(["False"] + [""] + [""])
-                 #self.user_id = client.recv(1024).decode() #Если вдруг у нас можнт быть ненулевой корень
 
 
                 first = QLabel()
@@ -269,7 +266,7 @@ class Shell(QMainWindow):
     def mainMission(self):
         self.toolbar.setVisible(True)
 
-        self.main_widget = Cloud_Folder()
+        self.main_widget = Cloud_Folder(host = self.host, port = self.port, parent = self)
 
         self.setCentralWidget(self.main_widget)
         self.setWindowTitle("Cloud Folder")
@@ -277,45 +274,14 @@ class Shell(QMainWindow):
         self.setGeometry(50, 50, 1200, 600)
 
     def Download(self):
-        self.main_widget.startNewDownloading(self.host, self.port)  #Смотри Cloud_Folder
+        if len(self.main_widget.WindowForUserFolders.selectedItems()) != 0:
+            self.main_widget.startNewDownloading()
 
     def Upload(self):
-        self.path = "Lul"
-        self.path = QFileDialog.getOpenFileName(self, "File") #возвращает пару путь и еще что-то, непонятно, зачем
-        name = self.path[0][self.path[0].rfind('/') + 1:]
-        a = [self.main_widget.ListOfUserFolders[i].getName() for i in self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].folders]
-        b = [text for text, id in self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].files]
-        c = []
-        if self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].id in self.main_widget.ListOfUploads:
-            c = [text for text, id in self.main_widget.ListOfUploads[self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].id]]
-        if name not in a and name not in b and name not in c and name != '':
-            self.uploadingDialog = QDialog(self.main_widget)
-            self.uploadingDialog.setWindowTitle("Uploading")
-            layout = QVBoxLayout()
-            textlabel = QLabel("Файл: " + name)
-            layout.addWidget(textlabel)
-            tasklabel = QLabel("будет загружен в папку: " + (self.main_widget.UserTree.currentItem().text(0)))
-            layout.addWidget(tasklabel)
-            buttonLayout = QHBoxLayout()
-            okButton = QPushButton("OK")
-            okButton.clicked.connect(self.uploadingDialogOK)
-            buttonLayout.addWidget(okButton)
-            cancelButton = QPushButton("Cancel")
-            cancelButton.clicked.connect(lambda: self.uploadingDialog.close())
-            buttonLayout.addWidget(cancelButton)
-            layout.addLayout(buttonLayout)
-            self.uploadingDialog.setLayout(layout)
-            self.uploadingDialog.exec_()
-
-    def uploadingDialogOK(self):
-        self.main_widget.startNewUploading(self.path[0], self.host, self.port)
-        self.uploadingDialog.close()
+        self.main_widget.upload()
 
     def Delete(self):
-        print("Delete")
-
-    def Find_someone(self):
-        print("Find_someone")
+        self.main_widget.delete()
 
     def signOut(self):
         with open('Data//user.csv', 'w', newline='') as csvfile:
@@ -329,8 +295,6 @@ class Shell(QMainWindow):
             self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfNormalIcons[i]))
         self.main_widget.UserTree.setStyleSheet("background: white;")
         self.main_widget.WindowForUserFolders.setStyleSheet("background: white;")
-        self.main_widget.WindowForServerFolders.setStyleSheet("background: white;")
-        self.main_widget.ServerTree.setStyleSheet("background: white;")
         self.style = "Normal"
 
     def changeThemeToAnime(self):
@@ -349,157 +313,12 @@ class Shell(QMainWindow):
                 image.save("Icons//Scaled" + path, "JPG")
             self.main_widget.UserTree.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][0] + ");")
             self.main_widget.WindowForUserFolders.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][1] + ");")
-            self.main_widget.WindowForServerFolders.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][2] + ");")
-            self.main_widget.ServerTree.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][3] + ");")
 
     def New_folder(self):
-        if len(self.main_widget.UserTree.selectedItems()) != 0:
-            self.new_folderDialog = QDialog(self.main_widget)
-            self.new_folderDialog.setWindowTitle("New folder")
-            layout = QVBoxLayout()
-            textlabel = QLabel("Новая папка будет создана в: " + (self.main_widget.UserTree.currentItem().text(0)))
-            layout.addWidget(textlabel)
-            tasklabel = QLabel("Введите название:")
-            layout.addWidget(tasklabel)
-            self.new_folderName = QLineEdit()
-            layout.addWidget(self.new_folderName)
-            self.new_folderInError = QLabel("Недопустимое название папки")
-            layout.addWidget(self.new_folderInError)
-            self.new_folderInError.setStyleSheet("QLabel { color : red; }")
-            self.new_folderInError.setVisible(False)
-            buttonLayout = QHBoxLayout()
-            okButton = QPushButton("OK")
-            okButton.clicked.connect(self.new_folderOK)
-            buttonLayout.addWidget(okButton)
-            cancelButton = QPushButton("Cancel")
-            cancelButton.clicked.connect(lambda: self.new_folderDialog.close())
-            buttonLayout.addWidget(cancelButton)
-            layout.addLayout(buttonLayout)
-            self.new_folderDialog.setLayout(layout)
-            self.new_folderDialog.exec_()
-
-    def new_folderOK(self):
-        name = self.new_folderName.text()
-        if (name in  [self.main_widget.ListOfUserFolders[i].getName() for i in self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].folders]
-            or name == ''):
-            self.new_folderInError.setVisible(True)
-            self.new_folderName.setText(None)
-        else:
-            self.client = socket.socket()
-            self.client.connect((self.host, self.port))
-            self.client.send("NewFolder".encode())
-            self.client.recv(1024).decode()
-            self.client.send(name.encode())
-
-            self.client.recv(1024).decode()
-            self.client.send(str(max(self.main_widget.ListOfUserFolders) + 1).encode())
-
-            self.client.recv(1024).decode()
-            self.client.send(str(self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].id).encode())
-            self.client.recv(1024).decode()
-            self.client.close()
-
-            self.main_widget.newFolder(name)
-            self.new_folderDialog.close()
+        self.main_widget.newFolder()
 
     def Change_name(self):
-        if (len(self.main_widget.UserTree.selectedItems()) != 0
-            and (len(self.main_widget.WindowForUserFolders.selectedItems()) == 0
-                 or self.main_widget.type != "UploadingFile")):
-            self.change_nameDialog = QDialog(self.main_widget)
-            self.change_nameDialog.setWindowTitle("Change the name")
-            layout = QVBoxLayout()
-            textlabel = QLabel()
-            layout.addWidget(textlabel)
-            tasklabel = QLabel("Введите новое название:")
-            layout.addWidget(tasklabel)
-            if ((len(self.main_widget.WindowForUserFolders.selectedItems()) == 0
-                  or self.main_widget.type == "Folder")):
-                self.change_nameType = "Folder"
-                if len(self.main_widget.WindowForUserFolders.selectedItems()) == 0:
-                    textlabel.setText("Название папки " + self.main_widget.UserTree.currentItem().text(0)
-                                      + " будет изменено")
-                else:
-                    textlabel.setText("Название папки " + self.main_widget.text
-                                      + " будет изменено")
-                self.change_nameName = QLineEdit()
-                layout.addWidget(self.change_nameName)
-
-            else:
-                self.change_nameType = "File"
-                textlabel.setText("Название файла " + self.main_widget.text
-                                  + " будет изменено")
-                locallayout = QHBoxLayout()
-                self.change_nameName = QLineEdit()
-                locallayout.addWidget(self.change_nameName)
-                format = QLabel(self.main_widget.text[self.main_widget.text.rfind('.'):])
-                locallayout.addWidget(format)
-                layout.addLayout(locallayout)
-
-            self.change_nameInError = QLabel("Недопустимое название")
-            layout.addWidget(self.change_nameInError)
-            self.change_nameInError.setStyleSheet("QLabel { color : red; }")
-            self.change_nameInError.setVisible(False)
-            buttonLayout = QHBoxLayout()
-            okButton = QPushButton("OK")
-            okButton.clicked.connect(self.change_nameOK)
-            buttonLayout.addWidget(okButton)
-            cancelButton = QPushButton("Cancel")
-            cancelButton.clicked.connect(lambda: self.change_nameDialog.close())
-            buttonLayout.addWidget(cancelButton)
-            layout.addLayout(buttonLayout)
-
-            self.change_nameDialog.setLayout(layout)
-            self.change_nameDialog.exec_()
-
-    def change_nameOK(self):
-        name = self.change_nameName.text()
-        if name == '':
-            self.change_nameInError.setVisible(True)
-            self.change_nameName.setText(None)
-        elif (self.change_nameType == "Folder" #Если выбрана папка в листе, но новое название уже есть в родительской папке(у папки/файла)
-            and len(self.main_widget.WindowForUserFolders.selectedItems()) != 0
-            and (name in [self.main_widget.ListOfUserFolders[i].getName() for i in self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].folders]
-                 or name in [text for text, id in self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].files])):
-            self.change_nameInError.setVisible(True)
-            self.change_nameName.setText(None)
-        elif (self.change_nameType == "Folder"#Если выбрана папка в дереве, но она корневая/ новое название уже есть в родительской папке(у папки/файла)
-              and len(self.main_widget.WindowForUserFolders.selectedItems()) == 0
-              and (self.main_widget.UserTree.currentItem().text(0) == self.login
-                   or  name in [self.main_widget.ListOfUserFolders[i].getName() for i in self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem().parent())].folders]
-                   or  name in [text for text, id in self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem().parent())].files])):
-            self.change_nameInError.setVisible(True)
-            self.change_nameName.setText(None)
-        elif (self.change_nameType == "File"#Если выбран файл в листе, он новое название == предыдущему/ совпадает с другим файлом
-              and (name + self.main_widget.text[self.main_widget.text.rfind('.'):]) in [text for text, id in self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].files]):
-            self.change_nameInError.setVisible(True)
-            self.change_nameName.setText(None)
-        else:
-            self.client = socket.socket()
-            self.client.connect((self.host, self.port))
-            self.client.send("ChangeName".encode())
-            self.client.recv(1024).decode()
-            if self.change_nameType == "File":
-                self.client.send("File".encode())
-                self.client.recv(1024).decode()
-                self.client.send((str(self.main_widget.ID)).encode())
-                self.client.recv(1024).decode()
-                self.client.send((name + self.main_widget.text[self.main_widget.text.rfind('.'):]).encode())
-                self.client.recv(1024).decode()
-                self.client.send(str(self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].id).encode())
-            else:
-                self.client.send("Folder".encode())
-                self.client.recv(1024).decode()
-                if len(self.main_widget.WindowForUserFolders.selectedItems()) != 0:
-                    self.client.send((str(self.main_widget.ID)).encode())
-                else:
-                    self.client.send(str(self.main_widget.pathToFolders[str(self.main_widget.UserTree.currentItem())].id).encode())
-                self.client.recv(1024).decode()
-                self.client.send(name.encode())
-            self.client.recv(1024).decode()
-            self.client.close()
-            self.main_widget.changeName(name, self.change_nameType)
-            self.change_nameDialog.close()
+        self.main_widget.changeName()
 
     def eventFilter(self, obj, event):
         if obj.objectName() == 'ShowListOfDownloads':

@@ -32,7 +32,7 @@ class QCustomQWidget (QWidget):
 
     def setType(self, type):
         self.type = type
-
+        
     def getType(self):
         return self.type
 

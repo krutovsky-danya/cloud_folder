@@ -15,7 +15,7 @@ class ThreadForConnection(QThread):
         self.connectionStatus = False
 
     def run(self):
-        time.sleep(3)
+        #time.sleep(3)
         if self.type == 1:
             self.client = socket.socket()
             while self.connectionStatus == False:
