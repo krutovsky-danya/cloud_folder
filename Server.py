@@ -1,225 +1,234 @@
 import socket, csv, threading, os, time
 
-def mainThread(client, address):
-    print("New thread for", str(address))
-    command = client.recv(1024).decode()
-    if command == "Login":
-        client.send("Ready".encode())
-        data = client.recv(1024).decode()
-        login, password = data[0:data.find('~')], data[data.find('~') + 1:]
+class mainThread(threading.Thread):
+    def __init__(self, client, address, server):
+        threading.Thread.__init__(self)
+        self.client = client
+        self.address = address
+        self.server = server
+        print("New thread for", str(self.address))
 
-        if login in users and users[login] == password:
-            client.send("Passed".encode())
-            client.recv(1024).decode()
-            print("Start1")
+    def run(self):
+        command = self.client.recv(1024).decode()
+        if command == "Login":
+            self.client.send("Ready".encode())
+            data = self.client.recv(1024).decode()
+            login, password = data[0:data.find('~')], data[data.find('~') + 1:]
 
-            file = open(("UsersData//" + login + "//FoldersDataFromServer.csv"), 'rb')
-            l = file.read(1024)
-            while (l):
-                client.send(l)
+            if login in self.server.users and self.server.users[login] == password:
+                self.client.send("Passed".encode())
+                self.client.recv(1024).decode()
+                print("Start1")
+
+                file = open(("UsersData//" + login + "//FoldersDataFromServer.csv"), 'rb')
                 l = file.read(1024)
-            file.close()
-            print("Done1")
+                while (l):
+                    self.client.send(l)
+                    l = file.read(1024)
+                file.close()
+                print("Done1")
 
-            client.recv(1024).decode()
-            print("Start2")
+                self.client.recv(1024).decode()
+                print("Start2")
 
-            file = open(("UsersData//" + login + "//FilesDataFromServer.csv"), 'rb')
-            l = file.read(1024)
-            while (l):
-                client.send(l)
+                file = open(("UsersData//" + login + "//FilesDataFromServer.csv"), 'rb')
                 l = file.read(1024)
-            file.close()
-            print("Done2")
+                while (l):
+                    self.client.send(l)
+                    l = file.read(1024)
+                file.close()
+                print("Done2")
 
-            client.recv(1024).decode()
-            print("Done3")
+                self.client.recv(1024).decode()
+                print("Done3")
 
-            activeUsers[address[0]] = login
-            commands[address[0]] = []
-            client.close()
+                self.server.activeUsers[self.address[0]] = login
+                self.server.commands[self.address[0]] = []
+                self.client.close()
 
-        elif login in users:
-            client.send("LogIn".encode())
-            client.close()
+            elif login in self.server.users:
+                self.client.send("LogIn".encode())
+                self.client.close()
 
-        else:
-            client.send("Password".encode())
-            client.close()
+            else:
+                self.client.send("Password".encode())
+                self.client.close()
 
-    elif command == "NewFolder":
-        client.send("Ready".encode())
-        name = client.recv(1024).decode()
+        elif command == "NewFolder":
+            self.client.send("Ready".encode())
+            name = self.client.recv(1024).decode()
 
-        client.send("Ready".encode())
-        id = client.recv(1024).decode()
+            self.client.send("Ready".encode())
+            id = self.client.recv(1024).decode()
 
-        client.send("Ready".encode())
-        parent_id = client.recv(1024).decode()
-        client.send("Ready".encode())
-        client.close()
-        print(name, id, parent_id)
-        commands[address[0]].append(["NewFolder", name, id, parent_id])
+            self.client.send("Ready".encode())
+            parent_id = self.client.recv(1024).decode()
+            self.client.send("Ready".encode())
+            self.client.close()
+            print(name, id, parent_id)
+            self.server.commands[self.address[0]].append(["NewFolder", name, id, parent_id])
 
-    elif command == "ChangeName":
-        client.send("Ready".encode())
-        type = client.recv(1024).decode()
-        client.send("Ready".encode())
-        id = client.recv(1024).decode()
-        client.send("Ready".encode())
-        name = client.recv(1024).decode()
-        if type == "File":
-            client.send("Ready".encode())
-            parent_id = client.recv(1024).decode()
-        client.send("Ready".encode())
-        client.close()
-        if type == "Folder":
-            commands[address[0]].append(["ChangeName", type, id, name])
-        else:
-            commands[address[0]].append(["ChangeName", type, id, name, parent_id])
+        elif command == "ChangeName":
+            self.client.send("Ready".encode())
+            type = self.client.recv(1024).decode()
+            self.client.send("Ready".encode())
+            id = self.client.recv(1024).decode()
+            self.client.send("Ready".encode())
+            name = self.client.recv(1024).decode()
+            if type == "File":
+                self.client.send("Ready".encode())
+                parent_id = self.client.recv(1024).decode()
+            self.client.send("Ready".encode())
+            self.client.close()
+            if type == "Folder":
+                self.server.commands[self.address[0]].append(["ChangeName", type, id, name])
+            else:
+                self.server.commands[self.address[0]].append(["ChangeName", type, id, name, parent_id])
 
-    elif command == "Uploading":
-        client.send("Ready".encode())
-        name = client.recv(1024).decode()
-        client.send("Ready".encode())
-        id = client.recv(1024).decode()
-        client.send("Ready".encode())
-        parent_id = client.recv(1024).decode()
-        client.send("Ready".encode())
-        file = open("UsersData//" + activeUsers[address[0]] + "//Files//" + id, 'wb')
-        print(name, id, parent_id)
-        size = client.recv(1024).decode()
-        print(size)
-        localsize = 0
-        client.send("Ready".encode())
-        l = client.recv(1024)
-        localsize += len(l)
-        while (localsize < int(size)):
-            file.write(l)
-            l = client.recv(1024)
+        elif command == "Uploading":
+            self.client.send("Ready".encode())
+            name = self.client.recv(1024).decode()
+            self.client.send("Ready".encode())
+            id = self.client.recv(1024).decode()
+            self.client.send("Ready".encode())
+            parent_id = self.client.recv(1024).decode()
+            self.client.send("Ready".encode())
+            file = open("UsersData//" + self.server.activeUsers[self.address[0]] + "//Files//" + id, 'wb')
+            print(name, id, parent_id)
+            size = self.client.recv(1024).decode()
+            print(size)
+            localsize = 0
+            self.client.send("Ready".encode())
+            l = self.client.recv(1024)
             localsize += len(l)
-        file.write(l)
-        file.close()
-        print("Done")
-        client.send("Ready".encode())
-        client.close()
-        commands[address[0]].append(["Uploading", name, id, parent_id])
+            while (localsize < int(size)):
+                file.write(l)
+                l = self.client.recv(1024)
+                localsize += len(l)
+            file.write(l)
+            file.close()
+            print("Done")
+            self.client.send("Ready".encode())
+            self.client.close()
+            self.server.commands[self.address[0]].append(["Uploading", name, id, parent_id])
 
-    elif command == "Download":
-        client.send("Ready".encode())
-        print("Done1")
-        ID = client.recv(1024).decode()
-        print(ID)
-        time.sleep(5)
-        if ID[:2] != "0.":
-            client.send(str(os.path.getsize("UsersData//" + activeUsers[address[0]] + '//Files//' + ID)).encode())
-            print("Done3")
-            client.recv(1024).decode()
-            file = open("UsersData//" + activeUsers[address[0]] + '//Files//' + ID, 'rb')
-        else:
-            ID = ID[2:]
+        elif command == "Download":
+            self.client.send("Ready".encode())
+            print("Done1")
+            ID = self.client.recv(1024).decode()
             print(ID)
-            time.sleep(5)
-            client.send(str(os.path.getsize("OpenData//" + ID)).encode())
+            self.client.send(str(os.path.getsize("UsersData//" + self.server.activeUsers[self.address[0]] + '//Files//' + ID)).encode())
             print("Done3")
-            client.recv(1024).decode()
-            file = open("OpenData//" + ID, 'rb')
-        l = file.read(1024)
-        while(l):
-            client.send(l)
+            self.client.recv(1024).decode()
+            file = open("UsersData//" + self.server.activeUsers[self.address[0]] + '//Files//' + ID, 'rb')
             l = file.read(1024)
-        file.close()
-        client.recv(1024).decode()
-        client.close()
+            while(l):
+                self.client.send(l)
+                l = file.read(1024)
+            file.close()
+            self.client.recv(1024).decode()
+            self.client.close()
 
-    elif command == "Exit":
-        client.send("Ready".encode())
-        client.close()
-        #Открываем данные пользователя
-        FoldersDataFromServer = []
-        with open("UsersData//" + activeUsers[address[0]] +"//FoldersDataFromServer.csv", newline='') as csvfile:
-            fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
-            for row in fresh:
-                adname, adself_id, adparent_id = row
-                if adparent_id == '':
-                    adparent_id = None
-                else:
-                    adparent_id = int(adparent_id)
-                FoldersDataFromServer.append([adname, int(adself_id), adparent_id])
-
-        FilesDataFromServer = {}
-        with open("UsersData//" + activeUsers[address[0]] + "//FilesDataFromServer.csv", newline='') as csvfile:
-            fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
-            for row in fresh:
-                data = row[1][1:-1]
-                a = data.split('), (')
-                for i in range(len(a)):
-                    if len(a[i]) > 0:
-                        if a[i][0] == '(':
-                            a[i] = a[i][1:]
-                        if a[i][-1] == ')':
-                            a[i] = a[i][:-1]
-                        n = a[i].rfind(' ')
-                        x = a[i][:n - 1]
-                        y = a[i][n + 1:]
-                        a[i] = (x[1:-1] , int(y))
+        elif command == "Exit":
+            self.client.send("Ready".encode())
+            self.client.close()
+            #Открываем данные пользователя
+            FoldersDataFromServer = []
+            with open("UsersData//" + self.server.activeUsers[self.address[0]] +"//FoldersDataFromServer.csv", newline='') as csvfile:
+                fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                for row in fresh:
+                    adname, adself_id, adparent_id = row
+                    if adparent_id == '':
+                        adparent_id = None
                     else:
-                        a = []
-                FilesDataFromServer[row[0]] = a
-            #Переписываем в соответствии с командами
-            for data in commands[address[0]]:
-                if data[0] == "NewFolder":
-                    FoldersDataFromServer.append([data[1], data[2], data[3]])
-                    FilesDataFromServer[data[2]] = []
+                        adparent_id = int(adparent_id)
+                    FoldersDataFromServer.append([adname, int(adself_id), adparent_id])
 
-                elif data[0] == "ChangeName":
-                    if data[1] == "Folder":
-                        for i in range(len(FoldersDataFromServer)):
-                            if FoldersDataFromServer[i][1] == int(data[2]):
-                                FoldersDataFromServer[i][0] = data[3]
-                                break
-                    else:
-                        for i in range(len(FilesDataFromServer[data[4]])):
-                            if FilesDataFromServer[data[4]][i][1] == int(data[2]):
-                                FilesDataFromServer[data[4]][i] = (data[3], int(data[2]))
-                                break
-                elif data[0] == "Uploading":
-                    FilesDataFromServer[data[3]].append((data[1], int(data[2])))
+            FilesDataFromServer = {}
+            with open("UsersData//" + self.server.activeUsers[self.address[0]] + "//FilesDataFromServer.csv", newline='') as csvfile:
+                fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                for row in fresh:
+                    data = row[1][1:-1]
+                    a = data.split('), (')
+                    for i in range(len(a)):
+                        if len(a[i]) > 0:
+                            if a[i][0] == '(':
+                                a[i] = a[i][1:]
+                            if a[i][-1] == ')':
+                                a[i] = a[i][:-1]
+                            n = a[i].rfind(' ')
+                            x = a[i][:n - 1]
+                            y = a[i][n + 1:]
+                            a[i] = (x[1:-1] , int(y))
+                        else:
+                            a = []
+                    FilesDataFromServer[row[0]] = a
+                #Переписываем в соответствии с командами
+                for data in self.server.commands[self.address[0]]:
+                    if data[0] == "NewFolder":
+                        FoldersDataFromServer.append([data[1], data[2], data[3]])
+                        FilesDataFromServer[data[2]] = []
 
-            #Сохраняем
-            with open("UsersData//" + activeUsers[address[0]] +"//FoldersDataFromServer.csv", 'w', newline='') as csvfile:
-                writer = csv.writer(csvfile, delimiter=' ', quotechar='|',
+                    elif data[0] == "ChangeName":
+                        if data[1] == "Folder":
+                            for i in range(len(FoldersDataFromServer)):
+                                if FoldersDataFromServer[i][1] == int(data[2]):
+                                    FoldersDataFromServer[i][0] = data[3]
+                                    break
+                        else:
+                            for i in range(len(FilesDataFromServer[data[4]])):
+                                if FilesDataFromServer[data[4]][i][1] == int(data[2]):
+                                    FilesDataFromServer[data[4]][i] = (data[3], int(data[2]))
+                                    break
+                    elif data[0] == "Uploading":
+                        FilesDataFromServer[data[3]].append((data[1], int(data[2])))
+
+                #Сохраняем
+                with open("UsersData//" + self.server.activeUsers[self.address[0]] +"//FoldersDataFromServer.csv", 'w', newline='') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=' ', quotechar='|',
+                                 quoting=csv.QUOTE_MINIMAL)
+                    for i in FoldersDataFromServer:
+                        writer.writerow(i)
+
+                with open("UsersData//" + self.server.activeUsers[self.address[0]] + "//FilesDataFromServer.csv", 'w', newline='') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=' ', quotechar='|',
                              quoting=csv.QUOTE_MINIMAL)
-                for i in FoldersDataFromServer:
-                    writer.writerow(i)
+                    for i in FilesDataFromServer:
+                        writer.writerow([i, FilesDataFromServer[i]])
 
-            with open("UsersData//" + activeUsers[address[0]] + "//FilesDataFromServer.csv", 'w', newline='') as csvfile:
-                writer = csv.writer(csvfile, delimiter=' ', quotechar='|',
-                         quoting=csv.QUOTE_MINIMAL)
-                for i in FilesDataFromServer:
-                    writer.writerow([i, FilesDataFromServer[i]])
+                del self.server.activeUsers[self.address[0]]
+                del self.server.commands[self.address[0]]
 
-            del activeUsers[address[0]]
-            del commands[address[0]]
+class server():
+    def __init__(self):
+        self.host = '0.0.0.0'
+        self.port = 60000
 
-host = '0.0.0.0'
-port = 60000
+        self.server = socket.socket()
 
-server = socket.socket()
+        self.server.bind((self.host, self.port))
+        self.server.listen(10)
+        print("Server is running")
 
-server.bind((host, port))
-server.listen(10)
-print("Server is running")
+        self.users = {}
+        self.activeUsers = {}
+        self.commands = {}
 
-users = {}
-activeUsers = {}
-commands = {}
+        self.threads = []
 
-with open('Users.csv', newline='') as csvfile:
-    fresh = csv.reader(csvfile, delimiter=' ')
-    for row in fresh:
-        users[row[0]] = row[1]
+        with open('Users.csv', newline='') as csvfile:
+            fresh = csv.reader(csvfile, delimiter=' ')
+            for row in fresh:
+                self.users[row[0]] = row[1]
 
-while True:
-    client, address = server.accept()
-    threading.Thread(target = mainThread(client, address)).start()
+        self.run()
+
+    def run(self):
+        while True:
+            client, address = self.server.accept()
+            newthread = mainThread(client = client, address = address, server = self)
+            newthread.start()
+            self.threads.append(newthread)
+            print("Start")
+
+server = server()
