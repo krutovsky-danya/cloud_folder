@@ -109,6 +109,7 @@ class Shell(QMainWindow):
         self.host = '84.201.131.54'
         self.port = 60000
         self.connectionStatus = False
+        self.CloudOpenedStatus = False
 
         self.style = "Normal"
 
@@ -263,10 +264,21 @@ class Shell(QMainWindow):
                 self.client.close()
                 self.connectionStatus = False
 
+            elif answer == "AlreadyUsed":
+                self.logInError.setVisible(True)
+                self.logInError.setText("This login is used in another session.")
+                self.userPass.setText(None)
+                self.userName.setText(None)
+                self.client.close()
+                self.connectionStatus = False
+
     def mainMission(self):
         self.toolbar.setVisible(True)
+        self.CloudOpenedStatus = True
 
-        self.main_widget = Cloud_Folder(host = self.host, port = self.port, parent = self)
+        self.main_widget = Cloud_Folder(host = self.host, port = self.port,
+                                        parent = self,
+                                        login = self.login + '~' + self.password)
 
         self.setCentralWidget(self.main_widget)
         self.setWindowTitle("Cloud Folder")
@@ -349,17 +361,20 @@ class Shell(QMainWindow):
         self.backgroundChanger()
 
     def closeEvent(self, event):
-        if len(self.main_widget.ListOfDowloads) != 0 or len(self.main_widget.ListOfUploads) != 0:
-            reply = QMessageBox.question(self, "Warning!",
-                                         "You have unfinished deals...", QMessageBox.Ok)
-            if reply == QMessageBox.Ok:
-                event.ignore()
-            else:
-                event.ignore()
+        if self.CloudOpenedStatus:
+            if len(self.main_widget.ListOfDowloads) != 0 or len(self.main_widget.ListOfUploads) != 0:
+                reply = QMessageBox.question(self, "Warning!",
+                                             "You have unfinished deals...", QMessageBox.Ok)
+                if reply == QMessageBox.Ok:
+                    event.ignore()
+                else:
+                    event.ignore()
 
-        else:
-            self.client = socket.socket()
-            self.client.connect((self.host, self.port))
-            self.client.send("Exit".encode())
-            self.client.recv(1024).decode()
-            self.client.close()
+            else:
+                self.client = socket.socket()
+                self.client.connect((self.host, self.port))
+                self.client.send("Exit".encode())
+                self.client.recv(1024).decode()
+                self.client.send((self.login + '~' + self.password).encode())
+                self.client.recv(1024).decode()
+                self.client.close()

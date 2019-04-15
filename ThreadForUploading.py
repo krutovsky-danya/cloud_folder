@@ -6,7 +6,7 @@ class ThreadForUploading(QThread):
 
     signal = pyqtSignal(list)
 
-    def __init__(self, name, id, parent_id, path, host, port):
+    def __init__(self, name, id, parent_id, path, host, port, login):
         super().__init__()
         self.name = name
         self.id = id
@@ -14,12 +14,15 @@ class ThreadForUploading(QThread):
         self.path = path
         self.host = host
         self.port = port
+        self.login = login
 
     def run(self):
         size = os.path.getsize(self.path)
         client = socket.socket()
         client.connect((self.host, self.port))
         client.send("Uploading".encode())
+        client.recv(1024).decode()
+        client.send(self.login.encode())
         client.recv(1024).decode()
         client.send(self.name.encode())
         client.recv(1024).decode()

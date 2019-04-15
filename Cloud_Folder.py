@@ -47,11 +47,12 @@ QProgressBar::chunk {
 """
 
 class Cloud_Folder(QWidget):
-    def __init__(self, host, port, parent):
+    def __init__(self, host, port, parent, login):
         super().__init__()
         self.host = host
         self.port = port
         self.parent = parent
+        self.login = login
 
         self.ListOfDowloads = {}
         self.ListOfDownloadThreads = []
@@ -296,7 +297,7 @@ class Cloud_Folder(QWidget):
                         name = name[0:name.rfind(".")] + "(1)" + name[name.rfind("."):]
                     while name in a:
                         name = name[0:name.rfind("(") + 1] + str(int(name[name.rfind("(") + 1:name.rfind(")")]) + 1) + name[name.rfind(")"):]
-                    newthread = ThreadForDownloading(file.id, name, self.host, self.port, path)
+                    newthread = ThreadForDownloading(file.id, name, self.host, self.port, path, self.login)
                     newthread.progress_signal.connect(self.updateValuesOfProgBars)
                     self.ListOfDownloadThreads.append(newthread)
                     self.WindowForProgBars.setFixedHeight(60 * len(self.ListOfDowloads))
@@ -384,7 +385,9 @@ class Cloud_Folder(QWidget):
             self.ListOfUploads[self.max_idOfFiles + 1] = [UploadingName, newbar]
             self.updateWindowForUploadings()
             self.updateWindow()
-            newthread = ThreadForUploading(UploadingName, self.max_idOfFiles + 1, self.pathToFolders[str(self.UserTree.currentItem())].id, path, self.host, self.port)
+            newthread = ThreadForUploading(UploadingName, self.max_idOfFiles + 1,
+                                           self.pathToFolders[str(self.UserTree.currentItem())].id,
+                                            path, self.host, self.port, self.login)
             newthread.signal.connect(self.updateValueForUploadingBars)
             self.ListOfUploadThreads.append(newthread)
             self.max_idOfFiles += 1
@@ -451,6 +454,8 @@ class Cloud_Folder(QWidget):
             self.client = socket.socket()
             self.client.connect((self.host, self.port))
             self.client.send("NewFolder".encode())
+            self.client.recv(1024).decode()
+            self.client.send(self.login.encode())
             self.client.recv(1024).decode()
             self.client.send(name.encode())
 
@@ -556,6 +561,8 @@ class Cloud_Folder(QWidget):
             self.client.connect((self.host, self.port))
             self.client.send("ChangeName".encode())
             self.client.recv(1024).decode()
+            self.client.send(self.login.encode())
+            self.client.recv(1024).decode()
             if self.ChangeNameType == "File":
                 self.client.send("File".encode())
                 self.client.recv(1024).decode()
@@ -650,6 +657,8 @@ class Cloud_Folder(QWidget):
         self.client = socket.socket()
         self.client.connect((self.host, self.port))
         self.client.send("Delete".encode())
+        self.client.recv(1024).decode()
+        self.client.send(self.login.encode())
         self.client.recv(1024).decode()
         self.client.send((self.DeleteType).encode())
         self.client.recv(1024).decode()

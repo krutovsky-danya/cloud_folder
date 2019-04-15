@@ -6,7 +6,7 @@ class ThreadForDownloading(QThread):
 
     progress_signal = pyqtSignal(list)
 
-    def __init__(self, ID, text, host, port, path):
+    def __init__(self, ID, text, host, port, path, login):
         super().__init__()
         self.ID = ID
         self.text = text
@@ -14,11 +14,14 @@ class ThreadForDownloading(QThread):
         self.host = host
         self.port = port
         self.path = path
+        self.login = login
 
     def run(self):
         client = socket.socket()
         client.connect((self.host, self.port))
         client.send("Download".encode())
+        client.recv(1024).decode()
+        client.send(self.login.encode())
         client.recv(1024).decode()
         client.send(str(self.ID).encode())
         size = client.recv(1024).decode()
