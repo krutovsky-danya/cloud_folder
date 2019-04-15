@@ -1,6 +1,6 @@
 import csv
 
-FoldersDataFromServer = [["Danya", 0, None],
+FoldersDataFromServer = [["admin", 0, None],
                          ["Girls", 1, 0],
                          ["JustAwesomeArts", 2, 0],
                          ["ABitOfGifs", 3, 0],
