@@ -129,24 +129,6 @@ class mainThread(threading.Thread):
             self.client.recv(1024).decode()
             self.client.close()
 
-        elif command == "Delete":
-            self.client.send("Ready".encode())
-            DeleteType = self.client.recv(1024).decode()
-            self.client.send("Ready".encode())
-            if DeleteType == "File":
-                ID = self.client.recv(1024).decode()
-                self.client.send("Ready".encode())
-                parent = self.client.recv(1024).decode()
-                self.server.commands[self.address[0]].append(["Delete", DeleteType, ID, parent])
-            else:
-                ID = self.client.recv(1024).decode()
-                while ID != "Done":
-                    self.server.commands[self.address[0]].append(["Delete", DeleteType, ID])
-                    self.client.send("Ready".encode())
-                    ID = self.client.recv(1024).decode()
-            self.client.send("Ready".encode())
-            self.client.close()
-
         elif command == "Exit":
             self.client.send("Ready".encode())
             self.client.close()
@@ -181,8 +163,6 @@ class mainThread(threading.Thread):
                         else:
                             a = []
                     FilesDataFromServer[row[0]] = a
-                print(FoldersDataFromServer)
-                print(FilesDataFromServer)
                 #Переписываем в соответствии с командами
                 for data in self.server.commands[self.address[0]]:
                     if data[0] == "NewFolder":
@@ -202,23 +182,6 @@ class mainThread(threading.Thread):
                                     break
                     elif data[0] == "Uploading":
                         FilesDataFromServer[data[3]].append((data[1], int(data[2])))
-
-                    elif data[0] == "Delete":
-                        print(data)
-                        if data[1] == "File":
-                            for i in range(len(FilesDataFromServer[data[3]])):
-                                if FilesDataFromServer[data[3]][i][1] == int(data[2]):
-                                    FilesDataFromServer[data[3]].pop(i)
-                                    break
-                            os.remove("UsersData//" + self.server.activeUsers[self.address[0]] + '//Files//' + data[2])
-                        else:
-                            for i in range(len(FoldersDataFromServer)):
-                                if FoldersDataFromServer[i][1] == int(data[2]):
-                                    FoldersDataFromServer.pop(i)
-                                    break
-                            for text, id in FilesDataFromServer[data[2]]:
-                                os.remove("UsersData//" + self.server.activeUsers[self.address[0]] + '//Files//' + str(id))
-                            del FilesDataFromServer[data[2]]
 
                 #Сохраняем
                 with open("UsersData//" + self.server.activeUsers[self.address[0]] +"//FoldersDataFromServer.csv", 'w', newline='') as csvfile:
