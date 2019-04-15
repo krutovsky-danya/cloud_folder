@@ -13,7 +13,7 @@ class WindowForUserFolders(QListWidget):
         self.setAcceptDrops(True)
         self.shell = shell
         self.cloud_folder = cloud_folder
-        #self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.uploadBackground()
 
     def uploadBackground(self):

@@ -106,7 +106,7 @@ class Shell(QMainWindow):
 
         self.setMinimumSize(300, 300)
 
-        self.host = 'localhost'
+        self.host = '84.201.131.54'
         self.port = 60000
         self.connectionStatus = False
 
@@ -306,11 +306,15 @@ class Shell(QMainWindow):
 
     def backgroundChanger(self):
         if self.style != "Normal":
-            x1, y1, x2, y2 = self.geometry().getCoords()
-            for path in self.backgrouds[self.style]:
-                image = QPixmap("Icons//" + path)
-                image = image.scaled((x2 + 50 - x1) / 4, y2 - 50 - y1)
-                image.save("Icons//Scaled" + path, "JPG")
+            x1, y1, x2, y2 = self.main_widget.UserTree.geometry().getCoords()
+            x12, y12, x22, y22 = self.main_widget.WindowForUserFolders.geometry().getCoords()
+            TreeImage = QPixmap("Icons//" + self.backgrouds[self.style][0])
+            TreeImage = TreeImage.scaled(x2 - x1, y2 - y1)
+            TreeImage.save("Icons//Scaled" + self.backgrouds[self.style][0], "JPG")
+
+            ListImage = QPixmap("Icons//" + self.backgrouds[self.style][1])
+            ListImage = ListImage.scaled(x22 - x12, y22 - y12)
+            ListImage.save("Icons//Scaled" + self.backgrouds[self.style][1], "JPG")
             self.main_widget.UserTree.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][0] + ");")
             self.main_widget.WindowForUserFolders.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][1] + ");")
 
