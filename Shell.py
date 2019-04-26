@@ -105,7 +105,7 @@ class Shell(QMainWindow):
 
         self.setMinimumSize(300, 300)
 
-        self.host = 'localhost'
+        self.host = '18.224.110.176'
         self.port = 60000
         self.connectionStatus = False
         self.login, self.password, self.answer = "", "", ""
@@ -195,6 +195,8 @@ class Shell(QMainWindow):
         self.setCentralWidget(self.begining)
         self.mode = "logIn"
         if self.check == "True":
+            self.userName.setText(self.login)
+            self.userPass.setText(self.password)
             self.logIn()
 
     def logIn(self):
@@ -203,7 +205,7 @@ class Shell(QMainWindow):
             print(self.connectionStatus)
 
             if self.connectionStatus == False:
-                if self.login == "" or self.password == "":
+                if self.answer != "Success":
                     self.login = self.userName.text()
                     self.password = self.userPass.text()
                 try:
