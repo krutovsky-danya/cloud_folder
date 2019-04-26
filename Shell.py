@@ -36,7 +36,9 @@ class Shell(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.backgrouds = {"Anime": ["CuteUserTree.jpg", "CuteUserFolders.jpg"]}
+        self.backgrounds = {"Anime": ["CuteUserTree.jpg", "CuteUserFolders.jpg"],
+                           "Elon": ["Elon.jpg", "Musk.jpg"],
+                           "Gachi": ["Boss.jpg", "Dungeon.jpg"]}
 
         self.listOfNormalIcons = {'Download from server':'Download.png',
                                   'Upload to server':'Upload.png',
@@ -50,12 +52,18 @@ class Shell(QMainWindow):
                                   'Sign out':'sleepy.jpg',
                                   'New folder':'thinking.png',
                                   'Change name':'writing.png'}
-        self.listOfCuteIcons = {'Download from server':'',
-                                  'Upload to server':'',
-                                  'Delete':'',
-                                  'Sign out':'',
-                                  'New Folder':'',
-                                  'Change name':''}
+        self.listOfElonIcons = {'Download from server':'E.jpg',
+                                  'Upload to server':'L.jpg',
+                                  'Delete':'O.jpg',
+                                  'Sign out':'M.jpg',
+                                  'New Folder':'U.jpg',
+                                  'Change name':'S.jpg'}
+        self.listOfGachiIcons = {'Download from server':'Sneaky.jpg',
+                                  'Upload to server':'Gasm.jpg',
+                                  'Delete':'Master.jpg',
+                                  'Sign out':'Sneaky.jpg',
+                                  'New Folder':'Gasm.jpg',
+                                  'Change name':'Master.jpg'}
         self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
                                 ['Upload.png','Upload to server', self.Upload],
                                 ['Delete.png', 'Delete', self.Delete],
@@ -82,8 +90,15 @@ class Shell(QMainWindow):
         menu = QMenu()
         self.normal = menu.addAction(QIcon('Icons//elonger.jpg'), "Normal")
         self.normal.triggered.connect(self.changeThemeToNormal)
-        anime = menu.addAction(QIcon('Icons//changer.jpg'), "Anime")
-        anime.triggered.connect(self.changeThemeToAnime)
+        self.anime = menu.addAction(QIcon('Icons//changer.jpg'), "Anime")
+        self.anime.triggered.connect(self.changeThemeToAnime)
+        self.elon = menu.addAction(QIcon('Icons//Tsu.jpg'), "Elon")
+        self.elon.triggered.connect(self.changeThemeToElon)
+        #self.elon.setVisible(False)
+        self.gachi = menu.addAction(QIcon('Icons//Elisium.png'), "Gachi")
+        self.gachi.triggered.connect(self.changeThemeToGachi)
+        #self.gachi.setVisible(False)
+
         self.changer.setMenu(menu)
         self.changer.setPopupMode(self.changer.MenuButtonPopup)
         self.toolbar.addWidget(self.changer)
@@ -373,19 +388,34 @@ class Shell(QMainWindow):
         self.style = "Anime"
         self.backgroundChanger()
 
+    def changeThemeToElon(self):
+        for i in self.listOfActions:
+            self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfElonIcons[i]))
+        self.normal.setIcon(QIcon('Icons//supa.png'))
+        self.style = "Elon"
+        self.backgroundChanger()
+
+    def changeThemeToGachi(self):
+        for i in self.listOfActions:
+            self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfGachiIcons[i]))
+        self.normal.setIcon(QIcon('Icons//supa.png'))
+        self.style = "Gachi"
+        self.backgroundChanger()
+
+
     def backgroundChanger(self):
         if self.style != "Normal":
             x1, y1, x2, y2 = self.main_widget.UserTree.geometry().getCoords()
             x12, y12, x22, y22 = self.main_widget.WindowForUserFolders.geometry().getCoords()
-            TreeImage = QPixmap("Icons//" + self.backgrouds[self.style][0])
+            TreeImage = QPixmap("Icons//" + self.backgrounds[self.style][0])
             TreeImage = TreeImage.scaled(x2 - x1, y2 - y1)
-            TreeImage.save("Icons//Scaled" + self.backgrouds[self.style][0], "JPG")
+            TreeImage.save("Icons//Scaled" + self.backgrounds[self.style][0], "JPG")
 
-            ListImage = QPixmap("Icons//" + self.backgrouds[self.style][1])
+            ListImage = QPixmap("Icons//" + self.backgrounds[self.style][1])
             ListImage = ListImage.scaled(x22 - x12, y22 - y12)
-            ListImage.save("Icons//Scaled" + self.backgrouds[self.style][1], "JPG")
-            self.main_widget.UserTree.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][0] + ");")
-            self.main_widget.WindowForUserFolders.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrouds[self.style][1] + ");")
+            ListImage.save("Icons//Scaled" + self.backgrounds[self.style][1], "JPG")
+            self.main_widget.UserTree.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrounds[self.style][0] + ");")
+            self.main_widget.WindowForUserFolders.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrounds[self.style][1] + ");")
 
     def New_folder(self):
         self.main_widget.newFolder()
