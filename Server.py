@@ -13,6 +13,8 @@ class mainThread(threading.Thread):
         self.client.send("Ready".encode())
         data = self.client.recv(1024).decode()
         login, password = data[0:data.find('~')], data[data.find('~') + 1:]
+        print(command, login, password)
+        print(self.server.activeUsers)
         if command == "Login":
             if login in self.server.users and self.server.users[login] == password:
                 if login in self.server.activeUsers:
@@ -56,6 +58,30 @@ class mainThread(threading.Thread):
             else:
                 self.client.send("Password".encode())
                 self.client.close()
+
+        elif command == "Registration":
+            if login in self.server.users:
+                self.client.send("AlreadyUsed".encode())
+                self.client.close()
+
+            else:
+                self.server.lock.acquire()
+                self.server.users[login] = password
+                self.server.lock.release()
+                self.client.send("Success".encode())
+                self.client.close()
+                with open('Users.csv', 'a', newline='') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=' ')
+                    writer.writerow([login, password])
+                os.makedirs("UsersData//" + login)
+                os.makedirs("UsersData//" + login + "//Files")
+                with open(("UsersData//" + login + "//FoldersDataFromServer.csv"), 'w', newline='') as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerow([login, 0, None])
+                with open(("UsersData//" + login + '//FilesDataFromServer.csv'), 'w', newline='') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=' ', quotechar='|',
+                                        quoting=csv.QUOTE_MINIMAL)
+                    writer.writerow(['0', []])
         else:
             if login in self.server.activeUsers:
                 if command == "NewFolder":
@@ -70,6 +96,7 @@ class mainThread(threading.Thread):
                     self.client.send("Ready".encode())
                     self.client.close()
                     print(name, id, parent_id)
+                    self.server.lock.acquire()
                     self.server.commands[login].append(["NewFolder", name, id, parent_id])
 
                 elif command == "ChangeName":
@@ -84,6 +111,7 @@ class mainThread(threading.Thread):
                         parent_id = self.client.recv(1024).decode()
                     self.client.send("Ready".encode())
                     self.client.close()
+                    self.server.lock.acquire()
                     if type == "Folder":
                         self.server.commands[login].append(["ChangeName", type, id, name])
                     else:
@@ -114,6 +142,7 @@ class mainThread(threading.Thread):
                     print("Done")
                     self.client.send("Ready".encode())
                     self.client.close()
+                    self.server.lock.acquire()
                     self.server.commands[login].append(["Uploading", name, id, parent_id])
 
                 elif command == "Download":
@@ -141,9 +170,11 @@ class mainThread(threading.Thread):
                         ID = self.client.recv(1024).decode()
                         self.client.send("Ready".encode())
                         parent = self.client.recv(1024).decode()
+                        self.server.lock.acquire()
                         self.server.commands[login].append(["Delete", DeleteType, ID, parent])
                     else:
                         ID = self.client.recv(1024).decode()
+                        self.server.lock.acquire()
                         while ID != "Done":
                             self.server.commands[login].append(["Delete", DeleteType, ID])
                             self.client.send("Ready".encode())
@@ -157,7 +188,7 @@ class mainThread(threading.Thread):
                     #Открываем данные пользователя
                     FoldersDataFromServer = []
                     with open("UsersData//" + login +"//FoldersDataFromServer.csv", newline='') as csvfile:
-                        fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                        fresh = csv.reader(csvfile)
                         for row in fresh:
                             adname, adself_id, adparent_id = row
                             if adparent_id == '':
@@ -223,23 +254,21 @@ class mainThread(threading.Thread):
 
                         #Сохраняем
                         with open("UsersData//" + login +"//FoldersDataFromServer.csv", 'w', newline='') as csvfile:
-                            writer = csv.writer(csvfile, delimiter=' ', quotechar='|',
-                                         quoting=csv.QUOTE_MINIMAL)
-                            for i in FoldersDataFromServer:
-                                writer.writerow(i)
+                            writer = csv.writer(csvfile)
+                            writer.writerows(FoldersDataFromServer)
 
                         with open("UsersData//" + login + "//FilesDataFromServer.csv", 'w', newline='') as csvfile:
                             writer = csv.writer(csvfile, delimiter=' ', quotechar='|',
                                      quoting=csv.QUOTE_MINIMAL)
                             for i in FilesDataFromServer:
                                 writer.writerow([i, FilesDataFromServer[i]])
-
+                        self.server.lock.acquire()
                         del self.server.commands[login]
                         for i in range(len(self.server.activeUsers)):
                             if self.server.activeUsers[i] == login:
                                 self.server.activeUsers.pop(i)
                                 break
-
+                self.server.lock.release()
 class server():
     def __init__(self):
         self.host = '0.0.0.0'
@@ -256,6 +285,7 @@ class server():
         self.commands = {}
 
         self.threads = []
+        self.lock = threading.Lock()
 
         with open('Users.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile, delimiter=' ')
@@ -270,6 +300,5 @@ class server():
             newthread = mainThread(client = client, address = address, server = self)
             newthread.start()
             self.threads.append(newthread)
-            print("Start")
 
 server = server()
