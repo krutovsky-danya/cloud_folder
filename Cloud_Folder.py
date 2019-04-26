@@ -54,7 +54,7 @@ class Cloud_Folder(QWidget):
         self.parent = parent
         self.login = login
 
-        self.ListOfDowloads = {}
+        self.ListOfDownloads = {}
         self.ListOfDownloadThreads = []
         self.CopyOfBars = {}
         self.createWindowForProgBars()
@@ -69,7 +69,7 @@ class Cloud_Folder(QWidget):
 
         self.FoldersDataFromServer = []
         with open('Data//FoldersDataFromServer.csv', newline='') as csvfile:
-            fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
+            fresh = csv.reader(csvfile)
             for row in fresh:
                 name, self_id, parent_id = row
                 if parent_id == '':
@@ -173,40 +173,41 @@ class Cloud_Folder(QWidget):
         self.WindowForUserFolders.clear()
         self.CopyOfBars.clear()
         self.ListForWidgetsInList.clear()
-        for index in self.pathToFolders[str(self.UserTree.currentItem())].folders:
-            myQCustomQWidget = QCustomQWidget()
-            myQCustomQWidget.setText(self.ListOfUserFolders[index].getName())
-            myQCustomQWidget.setType("Folder")
-            myQCustomQWidget.setObject(self.ListOfUserFolders[index].path)
-            myQCustomQWidget.setID(index)
-            myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
-            myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
-            self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
-            myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//Folder.png')))
-            self.ListForWidgetsInList[str(myQListWidgetItem)] = myQCustomQWidget
+        if self.UserTree.currentItem() != None:
+            for index in self.pathToFolders[str(self.UserTree.currentItem())].folders:
+                myQCustomQWidget = QCustomQWidget()
+                myQCustomQWidget.setText(self.ListOfUserFolders[index].getName())
+                myQCustomQWidget.setType("Folder")
+                myQCustomQWidget.setObject(self.ListOfUserFolders[index].path)
+                myQCustomQWidget.setID(index)
+                myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
+                myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
+                self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+                myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//Folder.png')))
+                self.ListForWidgetsInList[str(myQListWidgetItem)] = myQCustomQWidget
 
-        for text, id in self.pathToFolders[str(self.UserTree.currentItem())].files:
-            myQCustomQWidget = QCustomQWidget()
-            myQCustomQWidget.setText(text)
-            myQCustomQWidget.setID(id)
-            if id in self.ListOfUploads:
-                newbar = QProgressBar()
-                self.CopyOfBars[id] = newbar
-                myQCustomQWidget.setBar(newbar)
-                myQCustomQWidget.setType("UploadingFile")
-            else:
-                myQCustomQWidget.setType("File")
-                if id in self.ListOfDowloads:
+            for text, id in self.pathToFolders[str(self.UserTree.currentItem())].files:
+                myQCustomQWidget = QCustomQWidget()
+                myQCustomQWidget.setText(text)
+                myQCustomQWidget.setID(id)
+                if id in self.ListOfUploads:
                     newbar = QProgressBar()
                     self.CopyOfBars[id] = newbar
                     myQCustomQWidget.setBar(newbar)
-            myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
-            myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
-            self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
-            myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
-            self.ListForWidgetsInList[str(myQListWidgetItem)] = myQCustomQWidget
-        self.WindowForUserFolders.itemPressed.connect(self.item_clicked)
-        self.WindowForUserFolders.itemDoubleClicked.connect(self.item_double_clicked)
+                    myQCustomQWidget.setType("UploadingFile")
+                else:
+                    myQCustomQWidget.setType("File")
+                    if id in self.ListOfDownloads:
+                        newbar = QProgressBar()
+                        self.CopyOfBars[id] = newbar
+                        myQCustomQWidget.setBar(newbar)
+                myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
+                myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
+                self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+                myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
+                self.ListForWidgetsInList[str(myQListWidgetItem)] = myQCustomQWidget
+            self.WindowForUserFolders.itemPressed.connect(self.item_clicked)
+            self.WindowForUserFolders.itemDoubleClicked.connect(self.item_double_clicked)
 
     def listClickEmitted(self):
         self.ClickInTheList = True
@@ -228,29 +229,30 @@ class Cloud_Folder(QWidget):
     def contextMenuForList(self, event):
         if len(self.UserTree.selectedItems()) != 0:
             if self.ClickInTheList:
-                if self.type != "UploadingFile":
+                if self.type != "UploadingFile" and len(self.WindowForUserFolders.selectedItems()) == 1:
                     self.ClickInTheList = False
                     ListMenu = QMenu(self.WindowForUserFolders)
-                    if len(self.WindowForUserFolders.selectedItems()) == 1:
-                        if self.type == "File":
-                            Download = ListMenu.addAction(QIcon("Icons//Download.png"), "Download")
-                            Download.triggered.connect(self.startNewDownloading)
-                        ChangeName = ListMenu.addAction(QIcon("Icons//change_name.png"), "Change the name")
-                        ChangeName.triggered.connect(self.changeName)
-                        Delete = ListMenu.addAction(QIcon("Icons//Delete.png"), "Delete")
-                        Delete.triggered.connect(self.delete)
-                    else:
+                    if self.type == "File":
                         Download = ListMenu.addAction(QIcon("Icons//Download.png"), "Download")
                         Download.triggered.connect(self.startNewDownloading)
-                    ListMenu.exec_(self.WindowForUserFolders.mapToGlobal(event))
-
+                    ChangeName = ListMenu.addAction(QIcon("Icons//change_name.png"), "Change the name")
+                    ChangeName.triggered.connect(self.changeName)
+                    Delete = ListMenu.addAction(QIcon("Icons//Delete.png"), "Delete")
+                    Delete.triggered.connect(self.delete)
+                elif len(self.WindowForUserFolders.selectedItems()) > 1:
+                    self.ClickInTheList = False
+                    ListMenu = QMenu(self.WindowForUserFolders)
+                    Download = ListMenu.addAction(QIcon("Icons//Download.png"), "Download")
+                    Download.triggered.connect(self.startNewDownloading)
+                    Delete = ListMenu.addAction(QIcon("Icons//Delete.png"), "Delete")
+                    Delete.triggered.connect(self.delete)
             else:
                 ListMenu = QMenu(self.WindowForUserFolders)
                 Upload = ListMenu.addAction(QIcon("Icons//Upload.png"), "Upload here")
                 Upload.triggered.connect(self.upload)
                 NewFolder = ListMenu.addAction(QIcon("Icons//new_folder.png"), "Add new folder here")
                 NewFolder.triggered.connect(self.newFolder)
-                ListMenu.exec_(self.WindowForUserFolders.mapToGlobal(event))
+            ListMenu.exec_(self.WindowForUserFolders.mapToGlobal(event))
 
     def createWindowForProgBars(self):
         self.WindowForProgBars = QWidget()
@@ -276,7 +278,7 @@ class Cloud_Folder(QWidget):
             DownloadingDialog = QDialog(self)
             DownloadingDialog.setWindowTitle("Error")
             layout = QVBoxLayout(DownloadingDialog)
-            textlabel = QLabel("Скачивать можно только\n загруженные в облако файлы")
+            textlabel = QLabel("Скачивать можно только файлы")
             layout.addWidget(textlabel)
             okButton = QPushButton("OK")
             okButton.clicked.connect(lambda: DownloadingDialog.close())
@@ -290,7 +292,7 @@ class Cloud_Folder(QWidget):
                     file = self.ListForWidgetsInList[str(item)]
                     newbar = QProgressBar()
                     newbar.setStyleSheet(STYLE)
-                    self.ListOfDowloads[file.id] = [file.text, newbar]
+                    self.ListOfDownloads[file.id] = [file.text, newbar]
                     a = os.listdir(path)
                     name = file.text
                     if name in a:
@@ -300,31 +302,31 @@ class Cloud_Folder(QWidget):
                     newthread = ThreadForDownloading(file.id, name, self.host, self.port, path, self.login)
                     newthread.progress_signal.connect(self.updateValuesOfProgBars)
                     self.ListOfDownloadThreads.append(newthread)
-                    self.WindowForProgBars.setFixedHeight(60 * len(self.ListOfDowloads))
+                    self.WindowForProgBars.setFixedHeight(60 * len(self.ListOfDownloads))
                     newthread.start()
                 self.updateWindowForProgBars()
                 self.updateWindow()
 
     def updateWindowForProgBars(self):
         self.ListWithProgBars.clear()
-        for ID in self.ListOfDowloads:
+        for ID in self.ListOfDownloads:
             myQCustomQWidget = QCustomQWidget()
-            myQCustomQWidget.setText(self.ListOfDowloads[ID][0])
-            myQCustomQWidget.setBar(self.ListOfDowloads[ID][1])
+            myQCustomQWidget.setText(self.ListOfDownloads[ID][0])
+            myQCustomQWidget.setBar(self.ListOfDownloads[ID][1])
             myQCustomQWidget.setHeight()
             myQListWidgetItem = QListWidgetItem(self.ListWithProgBars)
             myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
             self.ListWithProgBars.setItemWidget(myQListWidgetItem, myQCustomQWidget)
             myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
-        self.WindowForProgBars.setFixedHeight(70 * len(self.ListOfDowloads))
+        self.WindowForProgBars.setFixedHeight(70 * len(self.ListOfDownloads))
 
     def updateValuesOfProgBars(self, data):#Получаем из потока данные для бара
         ID, percent = data
-        self.ListOfDowloads[ID][1].setValue(percent)
+        self.ListOfDownloads[ID][1].setValue(percent)
         if ID in self.CopyOfBars:
             self.CopyOfBars[ID].setValue(percent)
         if percent == 100:
-            del self.ListOfDowloads[ID]
+            del self.ListOfDownloads[ID]
             self.updateWindowForProgBars()
             self.updateWindow()
 
@@ -447,7 +449,7 @@ class Cloud_Folder(QWidget):
     def newFolderOK(self):
         name = self.NewFolderName.text()
         if (name in  [self.ListOfUserFolders[i].getName() for i in self.pathToFolders[str(self.UserTree.currentItem())].folders]
-            or name == ''):
+            or name == '' or "," in name):
             self.NewFolderInError.setVisible(True)
             self.NewFolderName.setText(None)
         else:
@@ -467,20 +469,20 @@ class Cloud_Folder(QWidget):
             self.client.recv(1024).decode()
             self.client.close()
 
-        id = max(self.ListOfUserFolders) + 1
-        parentId = self.pathToFolders[str(self.UserTree.currentItem())].id
-        newFolder = Folder(name = name, id = id)
-        self.ListOfUserFolders[parentId].addFolder(id)
-        self.ListOfUserFolders[id] = newFolder
-        parent = self.UserTree.currentItem()
+            id = max(self.ListOfUserFolders) + 1
+            parentId = self.pathToFolders[str(self.UserTree.currentItem())].id
+            newFolder = Folder(name = name, id = id)
+            self.ListOfUserFolders[parentId].addFolder(id)
+            self.ListOfUserFolders[id] = newFolder
+            parent = self.UserTree.currentItem()
 
-        path = QTreeWidgetItem(parent, [name])
-        path.setIcon(0, QIcon(QPixmap('Icons//Folder.png')))
-        newFolder.setPath(path)
-        self.pathToFolders[str(path)] = newFolder
-        self.updateWindow()
+            path = QTreeWidgetItem(parent, [name])
+            path.setIcon(0, QIcon(QPixmap('Icons//Folder.png')))
+            newFolder.setPath(path)
+            self.pathToFolders[str(path)] = newFolder
+            self.updateWindow()
 
-        self.NewFolderDialog.close()
+            self.NewFolderDialog.close()
 
     def changeName(self):
         if (len(self.UserTree.selectedItems()) != 0
@@ -536,7 +538,7 @@ class Cloud_Folder(QWidget):
     def changeNameOK(self):
         print(self.pathToFolders[str(self.UserTree.currentItem())].id)
         name = self.ChangeNameName.text()
-        if name == '':
+        if name == '' or (self.ChangeNameType == "Folder" and "," in name):
             self.ChangeNameInError.setVisible(True)
             self.ChangeNameName.setText(None)
         elif (self.ChangeNameType == "Folder" #Если выбрана папка в листе, но новое название уже есть в родительской папке(у папки/файла)
@@ -602,30 +604,56 @@ class Cloud_Folder(QWidget):
             self.ChangeNameDialog.close()
 
     def delete(self):
-        if (len(self.UserTree.selectedItems()) != 0
-            and (len(self.WindowForUserFolders.selectedItems()) == 0
-                 or self.type != "UploadingFile")
-            and not (len(self.WindowForUserFolders.selectedItems()) == 0
-                     and self.pathToFolders[str(self.UserTree.currentItem())].id == 0)
-            and len(self.WindowForUserFolders.selectedItems()) <= 1):
+        permission = True
+        counterFiles, counterFolders = 0, 0
+        self.ListForDeleteData = []
+        for item in self.WindowForUserFolders.selectedItems():
+            if self.ListForWidgetsInList[str(item)].type == "File":
+                counterFiles += 1
+            elif self.ListForWidgetsInList[str(item)].type == "Folder":
+                counterFolders += 1
+        if (len(self.UserTree.selectedItems()) == 0
+            or (len(self.WindowForUserFolders.selectedItems()) == 1
+                and self.type == "UploadingFile")
+            or (len(self.WindowForUserFolders.selectedItems()) > 1
+                and counterFiles == counterFolders == 0)
+            or (len(self.WindowForUserFolders.selectedItems()) == 0
+                and self.pathToFolders[str(self.UserTree.currentItem())].id == 0)):
+            permission = False
+        if permission:
             self.DeleteDialog = QDialog(self)
             self.DeleteDialog.setWindowTitle("Delete")
             layout = QVBoxLayout()
             textlabel = QLabel()
             layout.addWidget(textlabel)
-            if ((len(self.WindowForUserFolders.selectedItems()) == 0
-                  or self.type == "Folder")):
-                self.DeleteType = "Folder"
-                if len(self.WindowForUserFolders.selectedItems()) == 0:
-                    textlabel.setText("Папка " + self.UserTree.currentItem().text(0)
+            if (len(self.WindowForUserFolders.selectedItems()) == 0):
+                self.ListForDeleteData.append(("Folder",
+                                               self.pathToFolders[str(self.UserTree.currentItem())].id,
+                                               self.pathToFolders[str(self.UserTree.currentItem().parent())].id))
+                textlabel.setText("Папка " + self.UserTree.currentItem().text(0)
                                       + " будет удалена")
-                else:
+            elif len(self.WindowForUserFolders.selectedItems()) == 1:
+                if self.type == "Folder":
+                    self.ListForDeleteData.append(("Folder",
+                                                   self.ID,
+                                                   self.pathToFolders[str(self.UserTree.currentItem())].id))
                     textlabel.setText("Папка " + self.text
                                       + " будет удалена")
+                else:
+                    self.ListForDeleteData.append(("File", self.ID))
+                    textlabel.setText("Файл " + self.text
+                                      + " будет удален")
             else:
-                self.DeleteType = "File"
-                textlabel.setText("Файл " + self.text
-                                  + " будет удален")
+                for item in self.WindowForUserFolders.selectedItems():
+                    if self.ListForWidgetsInList[str(item)].type == "File":
+                        self.ListForDeleteData.append(("File",
+                                                       self.ListForWidgetsInList[str(item)].id))
+                    elif self.ListForWidgetsInList[str(item)].type == "Folder":
+                        self.ListForDeleteData.append(("Folder",
+                                                       self.ListForWidgetsInList[str(item)].id,
+                                                       self.pathToFolders[str(self.UserTree.currentItem())].id))
+                textlabel.setText("Файлы(" + str(counterFiles) + ") и Папки("
+                                  + str(counterFolders) + ") будут удалены")
             buttonLayout = QHBoxLayout()
             okButton = QPushButton("OK")
             okButton.clicked.connect(self.deleteOK)
@@ -634,47 +662,43 @@ class Cloud_Folder(QWidget):
             cancelButton.clicked.connect(lambda: self.DeleteDialog.close())
             buttonLayout.addWidget(cancelButton)
             layout.addLayout(buttonLayout)
-
             self.DeleteDialog.setLayout(layout)
             self.DeleteDialog.exec_()
 
     def deleteOK(self):
-        if self.DeleteType == "File":
-            for i in range(len(self.pathToFolders[str(self.UserTree.currentItem())].files)):
-                if self.pathToFolders[str(self.UserTree.currentItem())].files[i][1] == self.ID:
-                    self.pathToFolders[str(self.UserTree.currentItem())].files.pop(i)
-                    break
-        else:
-            self.ListOfFoldersToBeDeleted = []
-            if len(self.WindowForUserFolders.selectedItems()) != 0:
-                self.folderDeleter(folder = self.ID,
-                                   parent = self.pathToFolders[str(self.UserTree.currentItem())].id,
-                                   startPosition = True)
+        for item in self.ListForDeleteData:
+            DeleteType = item[0]
+            if DeleteType == "File":
+                for i in range(len(self.pathToFolders[str(self.UserTree.currentItem())].files)):
+                    if self.pathToFolders[str(self.UserTree.currentItem())].files[i][1] == item[1]:
+                        self.pathToFolders[str(self.UserTree.currentItem())].files.pop(i)
+                        break
             else:
-                self.folderDeleter(folder = self.pathToFolders[str(self.UserTree.currentItem())].id,
-                                   parent = self.pathToFolders[str(self.UserTree.currentItem().parent())].id,
+                self.ListOfFoldersToBeDeleted = []
+                self.folderDeleter(folder = item[1],
+                                   parent = item[2],
                                    startPosition = True)
-        self.client = socket.socket()
-        self.client.connect((self.host, self.port))
-        self.client.send("Delete".encode())
-        self.client.recv(1024).decode()
-        self.client.send(self.login.encode())
-        self.client.recv(1024).decode()
-        self.client.send((self.DeleteType).encode())
-        self.client.recv(1024).decode()
-        if self.DeleteType == "File":
-            self.client.send(str(self.ID).encode())
+            self.client = socket.socket()
+            self.client.connect((self.host, self.port))
+            self.client.send("Delete".encode())
             self.client.recv(1024).decode()
-            self.client.send(str(self.pathToFolders[str(self.UserTree.currentItem())].id).encode())
-        else:
-            for folder in self.ListOfFoldersToBeDeleted:
-                self.client.send(str(folder).encode())
+            self.client.send(self.login.encode())
+            self.client.recv(1024).decode()
+            self.client.send(DeleteType.encode())
+            self.client.recv(1024).decode()
+            if DeleteType == "File":
+                self.client.send(str(item[1]).encode())
                 self.client.recv(1024).decode()
-            self.client.send(("Done").encode())
-        self.client.recv(1024).decode()
-        self.client.close()
-        self.updateWindow()
-        self.DeleteDialog.close()
+                self.client.send(str(self.pathToFolders[str(self.UserTree.currentItem())].id).encode())
+            else:
+                for folder in self.ListOfFoldersToBeDeleted:
+                    self.client.send(str(folder).encode())
+                    self.client.recv(1024).decode()
+                self.client.send(("Done").encode())
+            self.client.recv(1024).decode()
+            self.client.close()
+            self.updateWindow()
+            self.DeleteDialog.close()
 
     def folderDeleter(self, folder, parent, startPosition = False):
         self.ListOfFoldersToBeDeleted.append(folder)

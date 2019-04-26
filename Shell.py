@@ -5,7 +5,7 @@ Created on Tue Mar 12 19:14:45 2019
 @author: Даня
 """
 
-import csv, socket
+import csv, socket, time
 from PyQt5.QtGui import (QPixmap,
                          QIcon,
                          QMovie)
@@ -30,7 +30,6 @@ from PyQt5.QtWidgets import (QLabel,
                              QToolBar)
 
 from Cloud_Folder import Cloud_Folder
-from nanachi import nanachi
 from ThreadForConnection import ThreadForConnection
 
 class Shell(QMainWindow):
@@ -93,7 +92,7 @@ class Shell(QMainWindow):
         self.spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.toolbar.addWidget(self.spacer)
 
-        for path, text in [("Icons//listofdowloads.png", 'ShowListOfDownloads'),
+        for path, text in [("Icons//listofdownloads.png", 'ShowListOfDownloads'),
                            ("Icons//listofuploads.png", 'ShowListOfUploads')]:
             button = QPushButton(QIcon(path), '')
             button.setObjectName(text)
@@ -106,16 +105,16 @@ class Shell(QMainWindow):
 
         self.setMinimumSize(300, 300)
 
-        self.host = '84.201.131.54'
+        self.host = 'localhost'
         self.port = 60000
         self.connectionStatus = False
-        self.CloudOpenedStatus = False
+        self.login, self.password, self.answer = "", "", ""
 
         self.style = "Normal"
 
         self.signIn()
 
-    def connectionProblem(self):
+    def connectionProblem(self, type):
         widgetForConnecting = QWidget()
         layout = QVBoxLayout()
         text = QLabel("Connecting. Please stand by")
@@ -134,12 +133,12 @@ class Shell(QMainWindow):
         self.setWindowTitle('Connecting')
         self.setWindowIcon(QIcon(QPixmap('Icons//hot.jpg')))
 
-        self.thread = ThreadForConnection(type = 1, host = self.host, port = self.port)
+        self.thread = ThreadForConnection(type = type, host = self.host, port = self.port)
         self.thread.signal.connect(self.defForThread)
         self.thread.start()
 
     def defForThread(self, data):
-        if data[0] == 1:
+        if data[0] == "logIn" or data[0] == "registration":
             self.client = data[1]
             self.connectionStatus = True
             gif = QMovie('Icons//successfulpepega.gif')
@@ -149,7 +148,10 @@ class Shell(QMainWindow):
             self.timerScreen.setInterval(3000)
             self.timerScreen.start()
             self.timerScreen.setSingleShot(True)
-            self.timerScreen.timeout.connect(self.signIn)
+            if data[0] == "logIn":
+                self.timerScreen.timeout.connect(self.logIn)
+            else:
+                self.timerScreen.timeout.connect(self.registration)
 
         else:
             self.client.send("Ready".encode())
@@ -158,7 +160,7 @@ class Shell(QMainWindow):
 
     def signIn(self):
         self.toolbar.setVisible(False)
-        self.begining = QWidget() #Нужны комментарии?
+        self.begining = QWidget()
         self.setWindowIcon(QIcon(QPixmap("Icons//hot.jpg")))
         self.setWindowTitle("Try me.")
         with open('Data//user.csv', newline='') as csvfile:
@@ -170,111 +172,164 @@ class Shell(QMainWindow):
         self.logInError.setStyleSheet("QLabel { background-color : white; color : red; }")
         self.logInError.setVisible(False)
         layout.addWidget(self.logInError)
-        nameInstruction = QLabel("Enter username:")
-        layout.addWidget(nameInstruction)
+        self.nameInstruction = QLabel("Enter your username:")
+        layout.addWidget(self.nameInstruction)
         self.userName = QLineEdit()
         layout.addWidget(self.userName)
-        passInstruction = QLabel("Enter your password:")
-        layout.addWidget(passInstruction)
+        self.passInstruction = QLabel("Enter your password:")
+        layout.addWidget(self.passInstruction)
         self.userPass = QLineEdit()
         self.userPass.setEchoMode(QLineEdit.Password)
         layout.addWidget(self.userPass)
         self.remeberme = QRadioButton("Rememeber me")
         self.remeberme.setChecked(True)
         layout.addWidget(self.remeberme)
-        log = QPushButton("Log in")
-        log.clicked.connect(self.logIn)
-        layout.addWidget(log)
-        sign = QPushButton("Sign in")
-        sign.clicked.connect(lambda: print("А фигушки!"))
-        layout.addWidget(sign)
+        self.log = QPushButton("Sign in")
+        self.log.clicked.connect(self.logIn)
+        self.log.setShortcut("Enter")
+        layout.addWidget(self.log)
+        self.sign = QPushButton("Sign up")
+        self.sign.clicked.connect(self.signUp)
+        layout.addWidget(self.sign)
         self.begining.setLayout(layout)
         self.setCentralWidget(self.begining)
-        if self.check == "True" or self.connectionStatus == True:
-            self.userName.setText(self.login)
-            self.userPass.setText(self.password)
+        self.mode = "logIn"
+        if self.check == "True":
             self.logIn()
 
     def logIn(self):
-        self.logInError.setVisible(False) #Если была ошибка - скрываем
-        print(self.connectionStatus)
+        if self.mode == "logIn":
+            self.logInError.setVisible(False) #Если была ошибка - скрываем
+            print(self.connectionStatus)
 
-        self.login = self.userName.text()
-        self.password = self.userPass.text()
+            if self.connectionStatus == False:
+                if self.login == "" or self.password == "":
+                    self.login = self.userName.text()
+                    self.password = self.userPass.text()
+                try:
+                    self.client = socket.socket()
+                    self.client.connect((self.host, self.port))
+                    self.connectionStatus = True
+                    self.logIn()
+                except ConnectionRefusedError:
+                    self.connectionProblem(type = "logIn")
 
-        if self.connectionStatus == False:
-            try:
-                self.client = socket.socket()
-                self.client.connect((self.host, self.port))
-                self.connectionStatus = True
-                self.logIn()
-            except ConnectionRefusedError:
-                self.connectionProblem()
+            else:
+                self.client.send("Login".encode())
+                self.client.recv(1024).decode()
 
-        else:
-            self.client.send("Login".encode())
-            self.client.recv(1024).decode()
+                data = self.login + '~' + self.password
 
-            data = self.login + '~' + self.password
+                self.client.send(data.encode())
 
-            self.client.send(data.encode())
+                self.answer = self.client.recv(1024).decode()
+                print(self.answer)
 
-            answer = self.client.recv(1024).decode()
-            print(answer)
+                if self.answer == 'Passed':
 
-            if answer == 'Passed':
+                    if self.remeberme.isChecked():
+                        with open('Data//user.csv', 'w', newline='') as csvfile:
+                            spamwriter = csv.writer(csvfile, delimiter=' ',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                            spamwriter.writerow(["True"] + [self.login] + [self.password])
+                    else:
+                        with open('Data//user.csv', 'w', newline='') as csvfile:
+                            spamwriter = csv.writer(csvfile, delimiter=' ',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                            spamwriter.writerow(["False"] + [""] + [""])
 
-                if self.remeberme.isChecked():
-                    with open('Data//user.csv', 'w', newline='') as csvfile:
-                        spamwriter = csv.writer(csvfile, delimiter=' ',
-                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                        spamwriter.writerow(["True"] + [self.login] + [self.password])
+
+                    first = QLabel()
+                    dance = QMovie('Icons//loading.gif')
+                    first.setMovie(dance)
+                    dance.start()
+                    self.setCentralWidget(first)
+                    self.setWindowTitle('Loading')
+                    self.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
+                    self.setMinimumSize(350, 350)
+
+                    self.thread = ThreadForConnection(type = "Passed", client = self.client)
+                    self.thread.signal.connect(self.defForThread)
+                    self.thread.start()
+
+                elif self.answer == 'LogIn':
+                    self.logInError.setText("Login and password do not match.")
+                    self.logInError.setVisible(True)
+                    self.userPass.setText(None)
+                    self.client.close()
+                    self.connectionStatus = False
+
+                elif self.answer == 'Password':
+                    self.logInError.setVisible(True)
+                    self.logInError.setText("Login does not exist.")
+                    self.userPass.setText(None)
+                    self.userName.setText(None)
+                    self.client.close()
+                    self.connectionStatus = False
+
+                elif self.answer == "AlreadyUsed":
+                    self.logInError.setVisible(True)
+                    self.logInError.setText("This login is used in another session.")
+                    self.userPass.setText(None)
+                    self.userName.setText(None)
+                    self.client.close()
+                    self.connectionStatus = False
+
+    def signUp(self):
+        self.mode = "signUp"
+        self.nameInstruction.setText("Registration\n\nEnter your new username:")
+        self.log.setText("Sign up")
+        self.log.clicked.connect(self.registration)
+        self.sign.setText("Back to sign in")
+        self.sign.clicked.connect(self.signIn)
+
+    def registration(self):
+        if self.mode == "signUp":
+            if self.connectionStatus == False:
+                self.login = self.userName.text()
+                self.password = self.userPass.text()
+                if (len(self.login) == 0 or len(self.password) == 0
+                    or " " in self.login or " " in self.password
+                    or "~" in self.login or "~" in self.password):
+                    self.logInError.setVisible(True)
+                    self.logInError.setText("Invalid data")
+                    self.userPass.setText(None)
+                    self.userName.setText(None)
                 else:
-                    with open('Data//user.csv', 'w', newline='') as csvfile:
-                        spamwriter = csv.writer(csvfile, delimiter=' ',
-                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                        spamwriter.writerow(["False"] + [""] + [""])
+                    try:
+                        self.client = socket.socket()
+                        self.client.connect((self.host, self.port))
+                        self.connectionStatus = True
+                        self.registration()
+                    except ConnectionRefusedError:
+                        self.connectionProblem(type = "registration")
+            else:
+                self.client.send("Registration".encode())
+                self.client.recv(1024).decode()
 
+                data = self.login + '~' + self.password
 
-                first = QLabel()
-                dance = QMovie('Icons//loading.gif')
-                first.setMovie(dance)
-                dance.start()
-                self.setCentralWidget(first)
-                self.setWindowTitle('Loading')
-                self.setWindowIconText(nanachi)
-                self.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
+                self.client.send(data.encode())
 
-                self.thread = ThreadForConnection(type = 2, client = self.client)
-                self.thread.signal.connect(self.defForThread)
-                self.thread.start()
-
-            elif answer == 'LogIn':
-                self.logInError.setText("Login and password do not match.")
-                self.logInError.setVisible(True)
-                self.userPass.setText(None)
+                self.answer = self.client.recv(1024).decode()
                 self.client.close()
-                self.connectionStatus = False
+                print(self.answer)
 
-            elif answer == 'Password':
-                self.logInError.setVisible(True)
-                self.logInError.setText("Login does not exist.")
-                self.userPass.setText(None)
-                self.userName.setText(None)
-                self.client.close()
-                self.connectionStatus = False
+                if self.answer == "Success":
+                    time.sleep(3)
+                    self.mode = "logIn"
+                    self.connectionStatus = False
+                    self.logIn()
 
-            elif answer == "AlreadyUsed":
-                self.logInError.setVisible(True)
-                self.logInError.setText("This login is used in another session.")
-                self.userPass.setText(None)
-                self.userName.setText(None)
-                self.client.close()
-                self.connectionStatus = False
+                elif self.answer == "AlreadyUsed":
+                    self.logInError.setVisible(True)
+                    self.logInError.setText("This login is already used.")
+                    self.userPass.setText(None)
+                    self.userName.setText(None)
+                    self.connectionStatus = False
 
     def mainMission(self):
         self.toolbar.setVisible(True)
-        self.CloudOpenedStatus = True
 
         self.main_widget = Cloud_Folder(host = self.host, port = self.port,
                                         parent = self,
@@ -340,7 +395,7 @@ class Shell(QMainWindow):
         if obj.objectName() == 'ShowListOfDownloads':
             if event.type() == QEvent.Enter:
                 x1, y1, x2, y2 = self.geometry().getCoords()
-                self.main_widget.WindowForProgBars.move(x2 - 300, y1 + 40) #Тут вроде понятно
+                self.main_widget.WindowForProgBars.move(x2 - 300, y1 + 40)
                 self.main_widget.WindowForProgBars.show()
 
             if event.type() == QEvent.Leave:
@@ -349,7 +404,7 @@ class Shell(QMainWindow):
         elif obj.objectName() == 'ShowListOfUploads':
             if event.type() == QEvent.Enter:
                 x1, y1, x2, y2 = self.geometry().getCoords()
-                self.main_widget.WindowForUploadings.move(x2 - 300, y1 + 40) #Тут вроде понятно
+                self.main_widget.WindowForUploadings.move(x2 - 300, y1 + 40)
                 self.main_widget.WindowForUploadings.show()
 
             if event.type() == QEvent.Leave:
@@ -361,16 +416,17 @@ class Shell(QMainWindow):
         self.backgroundChanger()
 
     def closeEvent(self, event):
-        if self.CloudOpenedStatus:
-            if len(self.main_widget.ListOfDowloads) != 0 or len(self.main_widget.ListOfUploads) != 0:
-                reply = QMessageBox.question(self, "Warning!",
-                                             "You have unfinished deals...", QMessageBox.Ok)
-                if reply == QMessageBox.Ok:
-                    event.ignore()
-                else:
-                    event.ignore()
-
+        if (self.toolbar.isVisible()
+            and (len(self.main_widget.ListOfDownloads) != 0 or len(self.main_widget.ListOfUploads) != 0)):
+            reply = QMessageBox.question(self, "Warning!",
+                                         "You have unfinished deals...", QMessageBox.Ok)
+            if reply == QMessageBox.Ok:
+                event.ignore()
             else:
+                event.ignore()
+
+        elif self.answer == "Passed":
+            try:
                 self.client = socket.socket()
                 self.client.connect((self.host, self.port))
                 self.client.send("Exit".encode())
@@ -378,3 +434,5 @@ class Shell(QMainWindow):
                 self.client.send((self.login + '~' + self.password).encode())
                 self.client.recv(1024).decode()
                 self.client.close()
+            except:
+                pass

@@ -15,8 +15,8 @@ class ThreadForConnection(QThread):
         self.connectionStatus = False
 
     def run(self):
-        #time.sleep(3)
-        if self.type == 1:
+        time.sleep(3)
+        if self.type == "logIn" or self.type == "registration":
             self.client = socket.socket()
             while self.connectionStatus == False:
                 try:
@@ -24,7 +24,7 @@ class ThreadForConnection(QThread):
                     self.connectionStatus = True
                 except ConnectionRefusedError:
                     time.sleep(1)
-            self.signal.emit([1, self.client])
+            self.signal.emit([self.type, self.client])
 
         else:
             self.client.send("Ready".encode())
@@ -51,4 +51,4 @@ class ThreadForConnection(QThread):
             file.write(l)
             file.close()
 
-            self.signal.emit([2])
+            self.signal.emit([self.type])
