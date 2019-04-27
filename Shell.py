@@ -11,6 +11,7 @@ from PyQt5.QtGui import (QPixmap,
                          QMovie)
 from PyQt5.QtCore import (QSize, QTimer, Qt)
 from PyQt5.Qt import QEvent
+from PyQt5.QtMultimedia import QSound
 from PyQt5.QtWidgets import (QLabel,
                              QVBoxLayout,
                              QHBoxLayout,
@@ -37,8 +38,8 @@ class Shell(QMainWindow):
         super().__init__()
 
         self.backgrounds = {"Anime": ["CuteUserTree.jpg", "CuteUserFolders.jpg"],
-                           "Elon": ["Elon.jpg", "Musk.jpg"],
-                           "Gachi": ["Boss.jpg", "Dungeon.jpg"]}
+                            "Elon": ["Elon.jpg", "Musk.jpg"],
+                            "Gachi": ["Boss.jpg", "Dungeon.jpg"]}
 
         self.listOfNormalIcons = {'Download from server':'Download.png',
                                   'Upload to server':'Upload.png',
@@ -56,13 +57,13 @@ class Shell(QMainWindow):
                                   'Upload to server':'L.jpg',
                                   'Delete':'O.jpg',
                                   'Sign out':'M.jpg',
-                                  'New Folder':'U.jpg',
+                                  'New folder':'U.jpg',
                                   'Change name':'S.jpg'}
         self.listOfGachiIcons = {'Download from server':'Sneaky.jpg',
                                   'Upload to server':'Gasm.jpg',
                                   'Delete':'Master.jpg',
                                   'Sign out':'Sneaky.jpg',
-                                  'New Folder':'Gasm.jpg',
+                                  'New folder':'Gasm.jpg',
                                   'Change name':'Master.jpg'}
         self.ToolBarElements = [['Download.png', 'Download from server', self.Download],
                                 ['Upload.png','Upload to server', self.Upload],
@@ -70,6 +71,8 @@ class Shell(QMainWindow):
                                 ['new_folder.png', 'New folder', self.New_folder],
                                 ['change_name.png', 'Change name', self.Change_name],
                                 ['logOut.png', 'Sign out', self.signOut],]
+
+        self.music = {'Ass we can': QSound("Sounds//Ass we can.wav")}
 
         self.toolbar = QToolBar()
         self.addToolBar(Qt.TopToolBarArea, self.toolbar)
@@ -94,10 +97,8 @@ class Shell(QMainWindow):
         self.anime.triggered.connect(self.changeThemeToAnime)
         self.elon = menu.addAction(QIcon('Icons//Tsu.jpg'), "Elon")
         self.elon.triggered.connect(self.changeThemeToElon)
-        #self.elon.setVisible(False)
         self.gachi = menu.addAction(QIcon('Icons//Elisium.png'), "Gachi")
         self.gachi.triggered.connect(self.changeThemeToGachi)
-        #self.gachi.setVisible(False)
 
         self.changer.setMenu(menu)
         self.changer.setPopupMode(self.changer.MenuButtonPopup)
@@ -120,7 +121,7 @@ class Shell(QMainWindow):
 
         self.setMinimumSize(300, 300)
 
-        self.host = '18.224.110.176'
+        self.host = 'localhost'
         self.port = 60000
         self.connectionStatus = False
         self.login, self.password, self.answer = "", "", ""
@@ -143,7 +144,6 @@ class Shell(QMainWindow):
         self.gifLabel.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.gifLabel)
         widgetForConnecting.setLayout(layout)
-        #widgetForConnecting.setSizeHint(self.gifLabel.sizeHint())
         self.setCentralWidget(widgetForConnecting)
         self.setWindowTitle('Connecting')
         self.setWindowIcon(QIcon(QPixmap('Icons//hot.jpg')))
@@ -400,6 +400,7 @@ class Shell(QMainWindow):
             self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfGachiIcons[i]))
         self.normal.setIcon(QIcon('Icons//supa.png'))
         self.style = "Gachi"
+        self.music["Ass we can"].play()
         self.backgroundChanger()
 
 
