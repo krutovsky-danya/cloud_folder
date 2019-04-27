@@ -131,13 +131,15 @@ class mainThread(threading.Thread):
                     print(size)
                     localsize = 0
                     self.client.send("Ready".encode())
-                    l = self.client.recv(1024)
-                    localsize += len(l)
+                    if int(size) != 0:
+                        l = self.client.recv(1024)
+                        localsize += len(l)
                     while (localsize < int(size)):
                         file.write(l)
                         l = self.client.recv(1024)
                         localsize += len(l)
-                    file.write(l)
+                    if int(size) != 0:
+                        file.write(l)
                     file.close()
                     print("Done")
                     self.client.send("Ready".encode())
@@ -268,7 +270,8 @@ class mainThread(threading.Thread):
                             if self.server.activeUsers[i] == login:
                                 self.server.activeUsers.pop(i)
                                 break
-                self.server.lock.release()
+                if command != "Download":
+                    self.server.lock.release()
 class server():
     def __init__(self):
         self.host = '0.0.0.0'
