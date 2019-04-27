@@ -72,7 +72,8 @@ class Shell(QMainWindow):
                                 ['change_name.png', 'Change name', self.Change_name],
                                 ['logOut.png', 'Sign out', self.signOut],]
 
-        self.music = {'Ass we can': QSound("Sounds//Ass we can.wav")}
+        self.music = {'Ass we can': QSound("Sounds//Ass we can.wav"),
+                      'Rekvi': QSound("Sounds//Rekvi.wav")}
 
         self.toolbar = QToolBar()
         self.addToolBar(Qt.TopToolBarArea, self.toolbar)
@@ -386,6 +387,7 @@ class Shell(QMainWindow):
             self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfAnimeIcons[i]))
         self.normal.setIcon(QIcon('Icons//supa.png'))
         self.style = "Anime"
+        self.music["Rekvi"].play()
         self.backgroundChanger()
 
     def changeThemeToElon(self):
