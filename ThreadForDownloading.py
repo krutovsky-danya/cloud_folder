@@ -28,17 +28,21 @@ class ThreadForDownloading(QThread):
         client.send("Ready".encode())
         file = open(self.path + '/' + self.text, 'wb')
         downloaded = 0
-        l = client.recv(1024)
-        downloaded += len(l)
+        if int(size) != 0:
+            l = client.recv(1024)
+            downloaded += len(l)
         while downloaded < int(size):
             file.write(l)
             self.percent = downloaded / int(size) * 100
             self.progress_signal.emit([self.ID, self.percent])
             l = client.recv(1024)
             downloaded += len(l)
-        file.write(l)
+        if int(size) != 0:
+            file.write(l)
+            self.percent = downloaded / int(size) * 100
+        else:
+            self.percent = 100
         file.close()
-        self.percent = downloaded / int(size) * 100
         self.progress_signal.emit([self.ID, self.percent])
         client.send('Ready'.encode())
         client.close()

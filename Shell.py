@@ -121,7 +121,7 @@ class Shell(QMainWindow):
 
         self.setMinimumSize(300, 300)
 
-        self.host = 'localhost'
+        self.host = '18.224.110.176'
         self.port = 60000
         self.connectionStatus = False
         self.login, self.password, self.answer = "", "", ""
@@ -228,7 +228,7 @@ class Shell(QMainWindow):
                     self.client.connect((self.host, self.port))
                     self.connectionStatus = True
                     self.logIn()
-                except ConnectionRefusedError:
+                except (ConnectionRefusedError, TimeoutError):
                     self.connectionProblem(type = "logIn")
 
             else:
@@ -318,7 +318,7 @@ class Shell(QMainWindow):
                         self.client.connect((self.host, self.port))
                         self.connectionStatus = True
                         self.registration()
-                    except ConnectionRefusedError:
+                    except (ConnectionRefusedError, TimeoutError):
                         self.connectionProblem(type = "registration")
             else:
                 self.client.send("Registration".encode())

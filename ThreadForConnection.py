@@ -22,7 +22,7 @@ class ThreadForConnection(QThread):
                 try:
                     self.client.connect((self.host, self.port))
                     self.connectionStatus = True
-                except ConnectionRefusedError:
+                except (ConnectionRefusedError, TimeoutError):
                     time.sleep(1)
             self.signal.emit([self.type, self.client])
 
