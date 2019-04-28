@@ -32,7 +32,7 @@ class QCustomQWidget (QWidget):
 
     def setType(self, type):
         self.type = type
-        
+
     def getType(self):
         return self.type
 
@@ -55,3 +55,6 @@ class QCustomQWidget (QWidget):
         gif = QMovie(path)
         self.textLabel.setMovie(gif)
         gif.start()
+
+    def darkStyle(self):
+        self.textLabel.setStyleSheet("color: white;")

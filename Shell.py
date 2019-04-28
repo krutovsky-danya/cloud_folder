@@ -14,11 +14,9 @@ from PyQt5.Qt import QEvent
 from PyQt5.QtMultimedia import QSound
 from PyQt5.QtWidgets import (QLabel,
                              QVBoxLayout,
-                             QHBoxLayout,
                              QPushButton,
                              QWidget,
                              QMainWindow,
-                             QFileDialog,
                              QAction,
                              QLineEdit,
                              QRadioButton,
@@ -26,7 +24,6 @@ from PyQt5.QtWidgets import (QLabel,
                              QSizePolicy,
                              QToolButton,
                              QMenu,
-                             QDialog,
                              QMessageBox,
                              QToolBar)
 
@@ -72,8 +69,7 @@ class Shell(QMainWindow):
                                 ['change_name.png', 'Change name', self.Change_name],
                                 ['logOut.png', 'Sign out', self.signOut],]
 
-        self.music = {'Ass we can': QSound("Sounds//Ass we can.wav"),
-                      'Rekvi': QSound("Sounds//Rekvi.wav")}
+        self.music = {'Ass we can': QSound("Sounds//Ass we can.wav")}
 
         self.toolbar = QToolBar()
         self.addToolBar(Qt.TopToolBarArea, self.toolbar)
@@ -264,7 +260,7 @@ class Shell(QMainWindow):
                     self.setCentralWidget(first)
                     self.setWindowTitle('Loading')
                     self.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
-                    self.setMinimumSize(350, 350)
+                    self.setMinimumSize(360, 350)
 
                     self.thread = ThreadForConnection(type = "Passed", client = self.client)
                     self.thread.signal.connect(self.defForThread)
@@ -381,14 +377,15 @@ class Shell(QMainWindow):
         self.main_widget.UserTree.setStyleSheet("background: white;")
         self.main_widget.WindowForUserFolders.setStyleSheet("background: white;")
         self.style = "Normal"
+        self.main_widget.updateWindow()
 
     def changeThemeToAnime(self):
         for i in self.listOfActions:
             self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfAnimeIcons[i]))
         self.normal.setIcon(QIcon('Icons//supa.png'))
         self.style = "Anime"
-        self.music["Rekvi"].play()
         self.backgroundChanger()
+        self.main_widget.updateWindow()
 
     def changeThemeToElon(self):
         for i in self.listOfActions:
@@ -396,6 +393,7 @@ class Shell(QMainWindow):
         self.normal.setIcon(QIcon('Icons//supa.png'))
         self.style = "Elon"
         self.backgroundChanger()
+        self.main_widget.updateWindow()
 
     def changeThemeToGachi(self):
         for i in self.listOfActions:
@@ -404,6 +402,7 @@ class Shell(QMainWindow):
         self.style = "Gachi"
         self.music["Ass we can"].play()
         self.backgroundChanger()
+        self.main_widget.updateWindow()
 
 
     def backgroundChanger(self):

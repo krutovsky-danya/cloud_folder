@@ -7,7 +7,8 @@ Created on Tue Mar 12 19:20:42 2019
 
 import csv, os, socket
 from PyQt5.QtGui import (QPixmap,
-                         QIcon)
+                         QIcon,
+                         QBrush)
 from PyQt5.QtCore import (Qt)
 from PyQt5.QtWidgets import (QHBoxLayout,
                              QTreeWidget,
@@ -173,6 +174,12 @@ class Cloud_Folder(QWidget):
         self.WindowForUserFolders.clear()
         self.CopyOfBars.clear()
         self.ListForWidgetsInList.clear()
+        if self.parent.style == "Elon" or self.parent.style == "Gachi":
+            for item in self.pathToFolders:
+                self.pathToFolders[item].path.setForeground(0, QBrush(Qt.white))
+        else:
+            for item in self.pathToFolders:
+                self.pathToFolders[item].path.setForeground(0, QBrush(Qt.black))
         if self.UserTree.currentItem() != None:
             for index in self.pathToFolders[str(self.UserTree.currentItem())].folders:
                 myQCustomQWidget = QCustomQWidget()
@@ -180,6 +187,8 @@ class Cloud_Folder(QWidget):
                 myQCustomQWidget.setType("Folder")
                 myQCustomQWidget.setObject(self.ListOfUserFolders[index].path)
                 myQCustomQWidget.setID(index)
+                if self.parent.style == "Elon" or self.parent.style == "Gachi":
+                    myQCustomQWidget.darkStyle()
                 myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
                 myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
                 self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
@@ -190,6 +199,8 @@ class Cloud_Folder(QWidget):
                 myQCustomQWidget = QCustomQWidget()
                 myQCustomQWidget.setText(text)
                 myQCustomQWidget.setID(id)
+                if self.parent.style == "Elon" or self.parent.style == "Gachi":
+                    myQCustomQWidget.darkStyle()
                 if id in self.ListOfUploads:
                     newbar = QProgressBar()
                     self.CopyOfBars[id] = newbar
