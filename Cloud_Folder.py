@@ -69,7 +69,7 @@ class Cloud_Folder(QWidget):
         self.ListForWidgetsInList = {}
 
         self.FoldersDataFromServer = []
-        with open('Data//FoldersDataFromServer.csv', newline='') as csvfile:
+        with open('CloudFolderData//Data//FoldersDataFromServer.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile)
             for row in fresh:
                 name, self_id, parent_id = row
@@ -80,7 +80,7 @@ class Cloud_Folder(QWidget):
                 self.FoldersDataFromServer.append([name, int(self_id), parent_id])
 
         self.FilesDataFromServer = {}
-        with open('Data//FilesDataFromServer.csv', newline='') as csvfile:
+        with open('CloudFolderData//Data//FilesDataFromServer.csv', newline='') as csvfile:
             fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
             for row in fresh:
                 data = row[1][1:-1]
@@ -154,17 +154,17 @@ class Cloud_Folder(QWidget):
         if self.ClickInTheTree:
             self.ClickInTheTree = False
             TreeMenu = QMenu(self.UserTree)
-            NewFolder = TreeMenu.addAction(QIcon("Icons//new_folder.png"), "Add new folder to this one")
+            NewFolder = TreeMenu.addAction(QIcon("CloudFolderData//Icons//new_folder.png"), "Add new folder to this one")
             NewFolder.triggered.connect(self.newFolder)
-            ChangeName = TreeMenu.addAction(QIcon("Icons//change_name.png"), "Change the name")
+            ChangeName = TreeMenu.addAction(QIcon("CloudFolderData//Icons//change_name.png"), "Change the name")
             ChangeName.triggered.connect(self.changeName)
-            Delete = TreeMenu.addAction(QIcon("Icons//Delete.png"), "Delete")
+            Delete = TreeMenu.addAction(QIcon("CloudFolderData//Icons//Delete.png"), "Delete")
             Delete.triggered.connect(self.delete)
             TreeMenu.exec_(self.UserTree.mapToGlobal(event))
 
     def createTree(self, parent = None, obj = None):
         newFolder = QTreeWidgetItem(parent, [obj.getName()])
-        newFolder.setIcon(0, QIcon(QPixmap('Icons//Folder.png')))
+        newFolder.setIcon(0, QIcon(QPixmap('CloudFolderData//Icons//Folder.png')))
         obj.setPath(newFolder)
         self.pathToFolders[str(newFolder)] = obj
         for folder in obj.folders:
@@ -192,7 +192,7 @@ class Cloud_Folder(QWidget):
                 myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
                 myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
                 self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
-                myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//Folder.png')))
+                myQListWidgetItem.setIcon(QIcon(QPixmap('CloudFolderData//Icons//Folder.png')))
                 self.ListForWidgetsInList[str(myQListWidgetItem)] = myQCustomQWidget
 
             for text, id in self.pathToFolders[str(self.UserTree.currentItem())].files:
@@ -215,7 +215,7 @@ class Cloud_Folder(QWidget):
                 myQListWidgetItem = QListWidgetItem(self.WindowForUserFolders)
                 myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
                 self.WindowForUserFolders.setItemWidget(myQListWidgetItem, myQCustomQWidget)
-                myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
+                myQListWidgetItem.setIcon(QIcon(QPixmap('CloudFolderData//Icons//File.png')))
                 self.ListForWidgetsInList[str(myQListWidgetItem)] = myQCustomQWidget
             self.WindowForUserFolders.itemPressed.connect(self.item_clicked)
             self.WindowForUserFolders.itemDoubleClicked.connect(self.item_double_clicked)
@@ -244,26 +244,29 @@ class Cloud_Folder(QWidget):
                     self.ClickInTheList = False
                     ListMenu = QMenu(self.WindowForUserFolders)
                     if self.type == "File":
-                        Download = ListMenu.addAction(QIcon("Icons//Download.png"), "Download")
+                        Download = ListMenu.addAction(QIcon("CloudFolderData//Icons//Download.png"), "Download")
                         Download.triggered.connect(self.startNewDownloading)
-                    ChangeName = ListMenu.addAction(QIcon("Icons//change_name.png"), "Change the name")
+                    ChangeName = ListMenu.addAction(QIcon("CloudFolderData//Icons//change_name.png"), "Change the name")
                     ChangeName.triggered.connect(self.changeName)
-                    Delete = ListMenu.addAction(QIcon("Icons//Delete.png"), "Delete")
+                    Delete = ListMenu.addAction(QIcon("CloudFolderData//Icons//Delete.png"), "Delete")
                     Delete.triggered.connect(self.delete)
+                    ListMenu.exec_(self.WindowForUserFolders.mapToGlobal(event))
                 elif len(self.WindowForUserFolders.selectedItems()) > 1:
                     self.ClickInTheList = False
                     ListMenu = QMenu(self.WindowForUserFolders)
-                    Download = ListMenu.addAction(QIcon("Icons//Download.png"), "Download")
+                    Download = ListMenu.addAction(QIcon("CloudFolderData//Icons//Download.png"), "Download")
                     Download.triggered.connect(self.startNewDownloading)
-                    Delete = ListMenu.addAction(QIcon("Icons//Delete.png"), "Delete")
+                    Delete = ListMenu.addAction(QIcon("CloudFolderData//Icons//Delete.png"), "Delete")
                     Delete.triggered.connect(self.delete)
+                    ListMenu.exec_(self.WindowForUserFolders.mapToGlobal(event))
             else:
                 ListMenu = QMenu(self.WindowForUserFolders)
-                Upload = ListMenu.addAction(QIcon("Icons//Upload.png"), "Upload here")
+                Upload = ListMenu.addAction(QIcon("CloudFolderData//Icons//Upload.png"), "Upload here")
                 Upload.triggered.connect(self.upload)
-                NewFolder = ListMenu.addAction(QIcon("Icons//new_folder.png"), "Add new folder here")
+                NewFolder = ListMenu.addAction(QIcon("CloudFolderData//Icons//new_folder.png"), "Add new folder here")
                 NewFolder.triggered.connect(self.newFolder)
-            ListMenu.exec_(self.WindowForUserFolders.mapToGlobal(event))
+                ListMenu.exec_(self.WindowForUserFolders.mapToGlobal(event))
+
 
     def createWindowForProgBars(self):
         self.WindowForProgBars = QWidget()
@@ -272,7 +275,7 @@ class Cloud_Folder(QWidget):
         layout.addWidget(self.ListWithProgBars)
         self.WindowForProgBars.setLayout(layout)
         myQCustomQWidget = QCustomQWidget()
-        myQCustomQWidget.setAnim('Icons//topLoading.gif')
+        myQCustomQWidget.setAnim('CloudFolderData//Icons//topLoading.gif')
         myQListWidgetItem = QListWidgetItem(self.ListWithProgBars)
         myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
         self.ListWithProgBars.setItemWidget(myQListWidgetItem, myQCustomQWidget)
@@ -328,7 +331,7 @@ class Cloud_Folder(QWidget):
             myQListWidgetItem = QListWidgetItem(self.ListWithProgBars)
             myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
             self.ListWithProgBars.setItemWidget(myQListWidgetItem, myQCustomQWidget)
-            myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
+            myQListWidgetItem.setIcon(QIcon(QPixmap('CloudFolderData//Icons//File.png')))
         self.WindowForProgBars.setFixedHeight(70 * len(self.ListOfDownloads))
 
     def updateValuesOfProgBars(self, data):#Получаем из потока данные для бара
@@ -377,7 +380,7 @@ class Cloud_Folder(QWidget):
         layout.addWidget(self.ListForUploadings)
         self.WindowForUploadings.setLayout(layout)
         myQCustomQWidget = QCustomQWidget()
-        myQCustomQWidget.setAnim('Icons//pikachu.gif')
+        myQCustomQWidget.setAnim('CloudFolderData//Icons//pikachu.gif')
         myQListWidgetItem = QListWidgetItem(self.ListForUploadings)
         myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
         self.ListForUploadings.setItemWidget(myQListWidgetItem, myQCustomQWidget)
@@ -417,7 +420,7 @@ class Cloud_Folder(QWidget):
             myQListWidgetItem = QListWidgetItem(self.ListForUploadings)
             myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
             self.ListForUploadings.setItemWidget(myQListWidgetItem, myQCustomQWidget)
-            myQListWidgetItem.setIcon(QIcon(QPixmap('Icons//File.png')))
+            myQListWidgetItem.setIcon(QIcon(QPixmap('CloudFolderData//Icons//File.png')))
         self.WindowForUploadings.setFixedHeight(70 * len(self.ListOfUploads))
 
     def updateValueForUploadingBars(self, data):
@@ -488,7 +491,7 @@ class Cloud_Folder(QWidget):
             parent = self.UserTree.currentItem()
 
             path = QTreeWidgetItem(parent, [name])
-            path.setIcon(0, QIcon(QPixmap('Icons//Folder.png')))
+            path.setIcon(0, QIcon(QPixmap('CloudFolderData//Icons//Folder.png')))
             newFolder.setPath(path)
             self.pathToFolders[str(path)] = newFolder
             self.updateWindow()

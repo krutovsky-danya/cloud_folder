@@ -22,13 +22,13 @@ class ThreadForConnection(QThread):
                 try:
                     self.client.connect((self.host, self.port))
                     self.connectionStatus = True
-                except (ConnectionRefusedError, TimeoutError):
+                except (ConnectionRefusedError, TimeoutError, OSError):
                     time.sleep(1)
             self.signal.emit([self.type, self.client])
 
         else:
             self.client.send("Ready".encode())
-            file = open('Data//' + 'FoldersDataFromServer.csv', 'wb')
+            file = open('CloudFolderData//Data//' + 'FoldersDataFromServer.csv', 'wb')
             l = self.client.recv(1024)
             while (l):
                 if len(l) < 1024:
@@ -40,7 +40,7 @@ class ThreadForConnection(QThread):
 
             self.client.send("Ready".encode())
 
-            file = open('Data//' + 'FilesDataFromServer.csv', 'wb')
+            file = open('CloudFolderData//Data//' + 'FilesDataFromServer.csv', 'wb')
             l = self.client.recv(1024)
             while (l):
                 if len(l) < 1024:

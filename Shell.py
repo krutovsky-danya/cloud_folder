@@ -69,7 +69,7 @@ class Shell(QMainWindow):
                                 ['change_name.png', 'Change name', self.Change_name],
                                 ['logOut.png', 'Sign out', self.signOut],]
 
-        self.music = {'Ass we can': QSound("Sounds//Ass we can.wav")}
+        self.music = {'Ass we can': QSound("CloudFolderData//Sounds//Ass we can.wav")}
 
         self.toolbar = QToolBar()
         self.addToolBar(Qt.TopToolBarArea, self.toolbar)
@@ -79,22 +79,22 @@ class Shell(QMainWindow):
         self.listOfActions  = {}
 
         for path, text, action in self.ToolBarElements:
-            newAction = QAction(QIcon('Icons//' + path), text, self)
+            newAction = QAction(QIcon('CloudFolderData//Icons//' + path), text, self)
             newAction.triggered.connect(action)
             self.listOfActions[text] = newAction
             self.toolbar.addAction(newAction)
 
 
         self.changer = QToolButton()
-        self.changer.setIcon(QIcon('Icons//idol.jpg'))
+        self.changer.setIcon(QIcon('CloudFolderData//Icons//idol.jpg'))
         menu = QMenu()
-        self.normal = menu.addAction(QIcon('Icons//elonger.jpg'), "Normal")
+        self.normal = menu.addAction(QIcon('CloudFolderData//Icons//elonger.jpg'), "Normal")
         self.normal.triggered.connect(self.changeThemeToNormal)
-        self.anime = menu.addAction(QIcon('Icons//changer.jpg'), "Anime")
+        self.anime = menu.addAction(QIcon('CloudFolderData//Icons//changer.jpg'), "Anime")
         self.anime.triggered.connect(self.changeThemeToAnime)
-        self.elon = menu.addAction(QIcon('Icons//Tsu.jpg'), "Elon")
+        self.elon = menu.addAction(QIcon('CloudFolderData//Icons//Tsu.jpg'), "Elon")
         self.elon.triggered.connect(self.changeThemeToElon)
-        self.gachi = menu.addAction(QIcon('Icons//Elisium.png'), "Gachi")
+        self.gachi = menu.addAction(QIcon('CloudFolderData//Icons//Elisium.png'), "Gachi")
         self.gachi.triggered.connect(self.changeThemeToGachi)
 
         self.changer.setMenu(menu)
@@ -105,8 +105,8 @@ class Shell(QMainWindow):
         self.spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.toolbar.addWidget(self.spacer)
 
-        for path, text in [("Icons//listofdownloads.png", 'ShowListOfDownloads'),
-                           ("Icons//listofuploads.png", 'ShowListOfUploads')]:
+        for path, text in [("CloudFolderData//Icons//listofdownloads.png", 'ShowListOfDownloads'),
+                           ("CloudFolderData//Icons//listofuploads.png", 'ShowListOfUploads')]:
             button = QPushButton(QIcon(path), '')
             button.setObjectName(text)
             button.setFlat(True)
@@ -121,7 +121,7 @@ class Shell(QMainWindow):
         self.host = '18.224.110.176'
         self.port = 60000
         self.connectionStatus = False
-        self.login, self.password, self.answer = "", "", ""
+        self.login, self.password, self.answer, self.mode = "", "", "", ""
 
         self.style = "Normal"
 
@@ -135,7 +135,7 @@ class Shell(QMainWindow):
         layout.addWidget(text)
 
         self.gifLabel = QLabel()
-        gif = QMovie('Icons//connectingpepega.gif')
+        gif = QMovie('CloudFolderData//Icons//connectingpepega.gif')
         self.gifLabel.setMovie(gif)
         gif.start()
         self.gifLabel.setAlignment(Qt.AlignCenter)
@@ -143,7 +143,7 @@ class Shell(QMainWindow):
         widgetForConnecting.setLayout(layout)
         self.setCentralWidget(widgetForConnecting)
         self.setWindowTitle('Connecting')
-        self.setWindowIcon(QIcon(QPixmap('Icons//hot.jpg')))
+        self.setWindowIcon(QIcon(QPixmap('CloudFolderData//Icons//hot.jpg')))
 
         self.thread = ThreadForConnection(type = type, host = self.host, port = self.port)
         self.thread.signal.connect(self.defForThread)
@@ -153,18 +153,14 @@ class Shell(QMainWindow):
         if data[0] == "logIn" or data[0] == "registration":
             self.client = data[1]
             self.connectionStatus = True
-            gif = QMovie('Icons//successfulpepega.gif')
+            gif = QMovie('CloudFolderData//Icons//successfulpepega.gif')
             self.gifLabel.setMovie(gif)
             gif.start()
             self.timerScreen = QTimer()
             self.timerScreen.setInterval(3000)
             self.timerScreen.start()
             self.timerScreen.setSingleShot(True)
-            if data[0] == "logIn":
-                self.timerScreen.timeout.connect(self.logIn)
-            else:
-                self.timerScreen.timeout.connect(self.registration)
-
+            self.timerScreen.timeout.connect(self.signIn)
         else:
             self.client.send("Ready".encode())
             self.client.close()
@@ -173,12 +169,13 @@ class Shell(QMainWindow):
     def signIn(self):
         self.toolbar.setVisible(False)
         self.begining = QWidget()
-        self.setWindowIcon(QIcon(QPixmap("Icons//hot.jpg")))
+        self.setWindowIcon(QIcon(QPixmap("CloudFolderData//Icons//hot.jpg")))
         self.setWindowTitle("Try me.")
-        with open('Data//user.csv', newline='') as csvfile:
-            fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
-            for row in fresh:
-                self.check, self.login, self.password = row
+        if self.login == "":
+            with open('CloudFolderData//Data//user.csv', newline='') as csvfile:
+                fresh = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                for row in fresh:
+                    self.check, self.login, self.password = row
         layout = QVBoxLayout()
         self.logInError = QLabel()
         self.logInError.setStyleSheet("QLabel { background-color : white; color : red; }")
@@ -205,8 +202,11 @@ class Shell(QMainWindow):
         layout.addWidget(self.sign)
         self.begining.setLayout(layout)
         self.setCentralWidget(self.begining)
-        self.mode = "logIn"
-        if self.check == "True":
+        if self.mode == "signUp" or self.mode == "registration":
+            self.signUp()
+        else:
+            self.mode = "logIn"
+        if (self.check == "True" or self.login != "") and self.mode == "logIn":
             self.userName.setText(self.login)
             self.userPass.setText(self.password)
             self.logIn()
@@ -214,7 +214,6 @@ class Shell(QMainWindow):
     def logIn(self):
         if self.mode == "logIn":
             self.logInError.setVisible(False) #Если была ошибка - скрываем
-            print(self.connectionStatus)
 
             if self.connectionStatus == False:
                 if self.answer != "Success":
@@ -225,7 +224,7 @@ class Shell(QMainWindow):
                     self.client.connect((self.host, self.port))
                     self.connectionStatus = True
                     self.logIn()
-                except (ConnectionRefusedError, TimeoutError):
+                except (ConnectionRefusedError, TimeoutError, OSError):
                     self.connectionProblem(type = "logIn")
 
             else:
@@ -237,29 +236,28 @@ class Shell(QMainWindow):
                 self.client.send(data.encode())
 
                 self.answer = self.client.recv(1024).decode()
-                print(self.answer)
 
                 if self.answer == 'Passed':
 
                     if self.remeberme.isChecked():
-                        with open('Data//user.csv', 'w', newline='') as csvfile:
+                        with open('CloudFolderData//Data//user.csv', 'w', newline='') as csvfile:
                             spamwriter = csv.writer(csvfile, delimiter=' ',
                                 quotechar='|', quoting=csv.QUOTE_MINIMAL)
                             spamwriter.writerow(["True"] + [self.login] + [self.password])
                     else:
-                        with open('Data//user.csv', 'w', newline='') as csvfile:
+                        with open('CloudFolderData//Data//user.csv', 'w', newline='') as csvfile:
                             spamwriter = csv.writer(csvfile, delimiter=' ',
                                 quotechar='|', quoting=csv.QUOTE_MINIMAL)
                             spamwriter.writerow(["False"] + [""] + [""])
 
 
                     first = QLabel()
-                    dance = QMovie('Icons//loading.gif')
+                    dance = QMovie('CloudFolderData//Icons//loading.gif')
                     first.setMovie(dance)
                     dance.start()
                     self.setCentralWidget(first)
                     self.setWindowTitle('Loading')
-                    self.setWindowIcon(QIcon(QPixmap('Icons//Tsu.jpg')))
+                    self.setWindowIcon(QIcon(QPixmap('CloudFolderData//Icons//Tsu.jpg')))
                     self.setMinimumSize(360, 350)
 
                     self.thread = ThreadForConnection(type = "Passed", client = self.client)
@@ -290,15 +288,23 @@ class Shell(QMainWindow):
                     self.connectionStatus = False
 
     def signUp(self):
+        if self.mode == "registration":
+            self.mode = "signUp"
+            self.registration()
         self.mode = "signUp"
         self.nameInstruction.setText("Registration\n\nEnter your new username:")
         self.log.setText("Sign up")
         self.log.clicked.connect(self.registration)
         self.sign.setText("Back to sign in")
-        self.sign.clicked.connect(self.signIn)
+        self.sign.clicked.connect(self.backToSignIn)
+
+    def backToSignIn(self):
+        self.mode = "login"
+        self.signIn()
 
     def registration(self):
         if self.mode == "signUp":
+            self.mode = "registration"
             if self.connectionStatus == False:
                 self.login = self.userName.text()
                 self.password = self.userPass.text()
@@ -314,8 +320,9 @@ class Shell(QMainWindow):
                         self.client = socket.socket()
                         self.client.connect((self.host, self.port))
                         self.connectionStatus = True
+                        self.mode == "signUp"
                         self.registration()
-                    except (ConnectionRefusedError, TimeoutError):
+                    except (ConnectionRefusedError, TimeoutError, OSError):
                         self.connectionProblem(type = "registration")
             else:
                 self.client.send("Registration".encode())
@@ -327,7 +334,6 @@ class Shell(QMainWindow):
 
                 self.answer = self.client.recv(1024).decode()
                 self.client.close()
-                print(self.answer)
 
                 if self.answer == "Success":
                     time.sleep(3)
@@ -340,6 +346,7 @@ class Shell(QMainWindow):
                     self.logInError.setText("This login is already used.")
                     self.userPass.setText(None)
                     self.userName.setText(None)
+                    self.mode = "signUp"
                     self.connectionStatus = False
 
     def mainMission(self):
@@ -351,7 +358,7 @@ class Shell(QMainWindow):
 
         self.setCentralWidget(self.main_widget)
         self.setWindowTitle("Cloud Folder")
-        self.setWindowIcon(QIcon(QPixmap('Icons//mega.jpg')))
+        self.setWindowIcon(QIcon(QPixmap('CloudFolderData//Icons//mega.jpg')))
         self.setGeometry(50, 50, 1200, 600)
 
     def Download(self):
@@ -365,7 +372,7 @@ class Shell(QMainWindow):
         self.main_widget.delete()
 
     def signOut(self):
-        with open('Data//user.csv', 'w', newline='') as csvfile:
+        with open('CloudFolderData//Data//user.csv', 'w', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=' ',
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
             spamwriter.writerow(["False"] + [""] + [""])
@@ -373,7 +380,7 @@ class Shell(QMainWindow):
 
     def changeThemeToNormal(self):
         for i in self.listOfActions:
-            self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfNormalIcons[i]))
+            self.listOfActions[i].setIcon(QIcon('CloudFolderData//Icons//' + self.listOfNormalIcons[i]))
         self.main_widget.UserTree.setStyleSheet("background: white;")
         self.main_widget.WindowForUserFolders.setStyleSheet("background: white;")
         self.style = "Normal"
@@ -381,24 +388,24 @@ class Shell(QMainWindow):
 
     def changeThemeToAnime(self):
         for i in self.listOfActions:
-            self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfAnimeIcons[i]))
-        self.normal.setIcon(QIcon('Icons//supa.png'))
+            self.listOfActions[i].setIcon(QIcon('CloudFolderData//Icons//' + self.listOfAnimeIcons[i]))
+        self.normal.setIcon(QIcon('CloudFolderData//Icons//supa.png'))
         self.style = "Anime"
         self.backgroundChanger()
         self.main_widget.updateWindow()
 
     def changeThemeToElon(self):
         for i in self.listOfActions:
-            self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfElonIcons[i]))
-        self.normal.setIcon(QIcon('Icons//supa.png'))
+            self.listOfActions[i].setIcon(QIcon('CloudFolderData//Icons//' + self.listOfElonIcons[i]))
+        self.normal.setIcon(QIcon('CloudFolderData//Icons//supa.png'))
         self.style = "Elon"
         self.backgroundChanger()
         self.main_widget.updateWindow()
 
     def changeThemeToGachi(self):
         for i in self.listOfActions:
-            self.listOfActions[i].setIcon(QIcon('Icons//' + self.listOfGachiIcons[i]))
-        self.normal.setIcon(QIcon('Icons//supa.png'))
+            self.listOfActions[i].setIcon(QIcon('CloudFolderData//Icons//' + self.listOfGachiIcons[i]))
+        self.normal.setIcon(QIcon('CloudFolderData//Icons//supa.png'))
         self.style = "Gachi"
         self.music["Ass we can"].play()
         self.backgroundChanger()
@@ -409,15 +416,15 @@ class Shell(QMainWindow):
         if self.style != "Normal":
             x1, y1, x2, y2 = self.main_widget.UserTree.geometry().getCoords()
             x12, y12, x22, y22 = self.main_widget.WindowForUserFolders.geometry().getCoords()
-            TreeImage = QPixmap("Icons//" + self.backgrounds[self.style][0])
+            TreeImage = QPixmap("CloudFolderData//Icons//" + self.backgrounds[self.style][0])
             TreeImage = TreeImage.scaled(x2 - x1, y2 - y1)
-            TreeImage.save("Icons//Scaled" + self.backgrounds[self.style][0], "JPG")
+            TreeImage.save("CloudFolderData//Icons//Scaled" + self.backgrounds[self.style][0], "JPG")
 
-            ListImage = QPixmap("Icons//" + self.backgrounds[self.style][1])
+            ListImage = QPixmap("CloudFolderData//Icons//" + self.backgrounds[self.style][1])
             ListImage = ListImage.scaled(x22 - x12, y22 - y12)
-            ListImage.save("Icons//Scaled" + self.backgrounds[self.style][1], "JPG")
-            self.main_widget.UserTree.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrounds[self.style][0] + ");")
-            self.main_widget.WindowForUserFolders.setStyleSheet("background-image: url(Icons//Scaled" + self.backgrounds[self.style][1] + ");")
+            ListImage.save("CloudFolderData//Icons//Scaled" + self.backgrounds[self.style][1], "JPG")
+            self.main_widget.UserTree.setStyleSheet("background-image: url(CloudFolderData//Icons//Scaled" + self.backgrounds[self.style][0] + ");")
+            self.main_widget.WindowForUserFolders.setStyleSheet("background-image: url(CloudFolderData//Icons//Scaled" + self.backgrounds[self.style][1] + ");")
 
     def New_folder(self):
         self.main_widget.newFolder()
